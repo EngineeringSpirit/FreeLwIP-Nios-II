@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template_settings>
+	<template
+		name="FreeRTOS - LwIP Demo"
+		description="Run FreeRTOS with LwIP"
+		file_to_open="main.c"
+		details="This demo use the bsd socket interface to run with FreeRTOS with an TCP echo and web server. This application shows how to initialize the LwIP TCP/IP Stack and run a simple TCP echo and http server. 
+			\n
+			\nThis example requires the FreeRTOS and LwIP TCP/IP Stack - Nios II Edition software components. It also requires several peripherals, including a lan91c111 / marvel Ethernet MAC. 
+			\n
+			\nThe BSP for this template is based on the FreeRTOS operating system.
+			\n
+			\nFor information about how this software example relates to Nios II hardware design examples,
+			\nrefer to the Design Examples page of the Nios II documentation available with your installation at:
+			\n&lt;installation_directory&gt;/nios2eds/documents/index.htm.
+			">
+	</template>
+	<stf>
+		<os_spec
+			name="FreeRTOS">
+			<sw_component name="LwIP TCP/IP Stack" id="LwIP">
+			</sw_component>
+		</os_spec>
+	</stf>
+	<create-this>
+		<app 	name="freertos_demo"
+			nios2-app-generate-makefile-args=" --set OBJDUMP_INCLUDE_SOURCE 1 --src-files main.c echo_server.c ethernet.c BasicWEB.c BlockQ.c blocktim.c countsem.c  death.c dynamic.c GenQTest.c  integer.c PollQ.c QPeek.c recmutex.c semtest.c"
+			bsp="freertos_net">
+		</app>
+		<bsp name="freertos_net" 
+			type="freertos"
+			nios2-bsp-args="--cmd enable_sw_package lwip">
+		</bsp>
+	</create-this>
+</template_settings>

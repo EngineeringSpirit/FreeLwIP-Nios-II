@@ -1,0 +1,41 @@
+Nios updated port for NiosEDS 11.0 and up
+Engineering Spirit (c) Jan-1-2012 
+
+Update includes:
+Fixed bug report:
+ - Nios II port bug when using -O3 or -Os - ID: 3037968
+Changed:
+ - It's now possible to keep interrupts enabled while the scheduler has not been started yet. (So now it's possible to print output via USART before the OS is started for example...)
+ - The FreeRTOS tick handler is called via the timer hook provided by the Nios II HAL library.
+
+To use FreeRTOS as BSP the following hardware is required:
+  (jtag_)uart or something ( this is where print message will end up)
+  an sys_clk_timer (I'm running at 1ms, but any speed would be sufficient)
+  
+To run the provided demo (Only one included which uses FreeRTOS and LwIP) you would need to have an Triple Speed Ethernet addapter included in your Nios II blok.
+  Currently there is only one PHY supported, but multiple PHY's shouldn't be to hard to implement. The TSE_MAC should keep it's default name so far!
+
+Clearly if you want to change the code you can remove most of these restrictions. But these are the requirements for the "out of box" experience.
+
+!!! Note !!! - currently using: lwip-1.4.0
+The LwIP stack uses a modifed version of the socket API! If you want to update the LwIP version you should also apply this patch!
+http://savannah.nongnu.org/patch/?7702
+
+Installation instructions
+Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.0)
+
+Download the niosii-port.zip and the freertos-lwip-demo-bsp.zip file provided on this page.
+
+1. Unzip niosii-port.zip into the $FREERTOS/Source/portable/GCC/ directory and replace the current port.
+2. Unzip freertos-lwip-demo-bsp.zip into the $FREERTOS/Demo/ directory so you would get a directory structure like: $FREERTOS/Demo/LwIP_NiosII_GCC.
+3. Goto $FREERTOS/Demo/LwIP_NiosII_GCC/ and execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
+4. Follow the steps provided by the console.
+
+Howto test your FreeRTOS OS installation
+
+In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Board Support Package
+In the dialogue box that appears you should be able to select "Real Time Engineers Ltd FreeRTOS 7.1.0" if you choose a .sopcinfo file you should be able to build a BSP.
+To test your application
+
+In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Application and BSP from Template
+Here you should be able to select "FreeRTOS - LwIP Demo" and build a system.

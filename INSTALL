@@ -1,0 +1,17 @@
+Howto install the new FreeRTOS BSP and the LwIP...?
+
+This directory needs to be placed in the Demo directory of your FreeRTOS download. There you must run one of the following:
+
+If you're on Windows execute alt-freertos-lwip-install.bat and if your on a unix like system execute alt-freertos-lwip-install.sh
+
+Follow the instructions on the shell and you should be ready to go within a sec.
+
+!!! Note !!!
+The LwIP stack uses a modifed version of the socket API! If you want to update the LwIP version you should also apply this patch!
+http://savannah.nongnu.org/patch/?7702
+
+Instructions in FreeRTOS.readme.txt.
+
+Enjoy!
+
+Engineering Spirit (c) 2012 http://engineering-spirit.nl/
