@@ -68,12 +68,12 @@ ALT_PATH="$1"
 INST_PATH="$2"
 
 # check if the arguments are not empty and valid
-if [ "${ALT_PATH}" == "" ] || ! ls "${ALT_PATH}/nios2eds" > /dev/null 2> /dev/null; then
+if [ "${ALT_PATH}" == "" ] || ! ls "${ALT_PATH}/nios2eds" &> /dev/null; then
 	echo "Altera path could not found..." 1>&2;
 	exit 1;
 fi;
 
-if [ "${INST_PATH}" == "" ] || ! ls "${INST_PATH}/freertos" > /dev/null 2> /dev/null; then
+if [ "${INST_PATH}" == "" ] || ! ls "${INST_PATH}/freertos" &> /dev/null; then
 	echo "Install path could not be found..." 1>&2;
 	exit 1;
 fi;
@@ -83,6 +83,39 @@ read -p " Do you agree to the GNU GPL? [type y/yes] > " ANS
 
 if [ "${ANS}" != "yes" ] && [ "${ANS}" != "y" ]; then
 	exit 1;
+fi;
+
+# auto update for later
+if which 2> /dev/null; then
+	if which wget &> /dev/null && which curl &> /dev/null; then
+		# make directories just to be sure
+		mkdir -p FreeRTOS_src 2> /dev/null;
+		mkdir -p lwip 2> /dev/null;
+	
+		# check for FreeRTOS update
+		NEW_VERSION=`curl "http://sourceforge.net/projects/freertos/files/FreeRTOS/" | grep -o "V[0-9].[0-9].[0-9]" | head -1`;
+		
+		if [ ${NEW_VERSION} != `cat FreeRTOS_src/.cur_version 2> /dev/null` ]; then
+			echo "New FreeRTOS version found: ${NEW_VERSION}";
+			echo "!!! TODO !!! create auto unpack and stuff...";
+			wget "http://downloads.sourceforge.net/project/freertos/FreeRTOS/${NEW_VERSION}/FreeRTOS${NEW_VERSION}.zip";
+			echo "Please unpack!";
+			echo ${NEW_VERSION} > FreeRTOS_src/.cur_version;
+			exit 1;
+		fi;
+		
+		# check for LwIP update
+		NEW_VERSION=`curl "http://download.savannah.gnu.org/releases/lwip/" | grep -o lwip-[0-9].[0-9].[0-9].zip | uniq | tail -1`;
+		
+		if [ ${NEW_VERSION} != `cat lwip/.cur_version 2> /dev/null` ]; then
+			echo "New LwIP version found: ${NEW_VERSION}";
+			echo "!!! TODO !!! create auto unpack and stuff...";
+			wget "http://download.savannah.gnu.org/releases/lwip/${NEW_VERSION}";
+			echo "Please unpack!";
+			echo ${NEW_VERSION} > lwip/.cur_version;
+			exit 1;
+		fi;
+	fi;
 fi;
 
 # set some other path
