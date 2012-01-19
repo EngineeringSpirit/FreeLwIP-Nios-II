@@ -169,8 +169,10 @@ echo "    - Copy FreeRTOS sources";
 cp FreeRTOS_src/Source/croutine.c "${INST_PATH}/freertos/FreeRTOS/src";
 cp FreeRTOS_src/Source/portable/MemMang/heap_3.c "${INST_PATH}/freertos/FreeRTOS/src";
 cp FreeRTOS_src/Source/list.c "${INST_PATH}/freertos/FreeRTOS/src";
-cp FreeRTOS_src/Source/portable/GCC/NiosII/port.c "${INST_PATH}/freertos/FreeRTOS/src/";
-cp FreeRTOS_src/Source/portable/GCC/NiosII/port_asm.S "${INST_PATH}/freertos/FreeRTOS/src/";
+
+cp nios2_freertos_port/port.c "${INST_PATH}/freertos/FreeRTOS/src/";
+cp nios2_freertos_port/port_asm.S "${INST_PATH}/freertos/FreeRTOS/src/";
+
 cp FreeRTOS_src/Source/queue.c "${INST_PATH}/freertos/FreeRTOS/src";
 cp FreeRTOS_src/Source/tasks.c "${INST_PATH}/freertos/FreeRTOS/src";
 cp FreeRTOS_src/Source/timers.c "${INST_PATH}/freertos/FreeRTOS/src";
@@ -182,7 +184,9 @@ cp FreeRTOS_src/Source/include/FreeRTOS.h "${INST_PATH}/freertos/FreeRTOS/inc";
 cp FreeRTOS_src/Source/include/list.h "${INST_PATH}/freertos/FreeRTOS/inc";
 cp FreeRTOS_src/Source/include/mpu_wrappers.h "${INST_PATH}/freertos/FreeRTOS/inc";
 cp FreeRTOS_src/Source/include/portable.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/portable/GCC/NiosII/portmacro.h "${INST_PATH}/freertos/FreeRTOS/inc";
+
+cp nios2_freertos_port/portmacro.h "${INST_PATH}/freertos/FreeRTOS/inc";
+
 cp FreeRTOS_src/Source/include/projdefs.h "${INST_PATH}/freertos/FreeRTOS/inc";
 cp FreeRTOS_src/Source/include/queue.h "${INST_PATH}/freertos/FreeRTOS/inc";
 cp FreeRTOS_src/Source/include/semphr.h "${INST_PATH}/freertos/FreeRTOS/inc";
