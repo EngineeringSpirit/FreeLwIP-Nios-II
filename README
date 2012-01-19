@@ -21,14 +21,12 @@ Clearly if you want to change the code you can remove most of these restrictions
 The LwIP stack uses a modifed version of the socket API! If you want to update the LwIP version you should also apply this patch!
 http://savannah.nongnu.org/patch/?7702
 
-Installation instructions
-Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.0)
+Installation instructions:
+If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 
-Download the niosii-port.zip and the freertos-lwip-demo-bsp.zip file provided on this page.
-
-1. Unzip niosii-port.zip into the $FREERTOS/Source/portable/GCC/ directory and replace the current port.
-2. Unzip freertos-lwip-demo-bsp.zip into the $FREERTOS/Demo/ directory so you would get a directory structure like: $FREERTOS/Demo/LwIP_NiosII_GCC.
-3. Goto $FREERTOS/Demo/LwIP_NiosII_GCC/ and execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
+1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.0)
+2. Unzip the latest FreeRTOS source into FreeRTOS_src directory.
+3. Execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
 4. Follow the steps provided by the console.
 
 Howto test your FreeRTOS OS installation
