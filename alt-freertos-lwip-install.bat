@@ -2,24 +2,29 @@
 @ rem save our work directory
 @ for /f %%i in ('cd') do set past=%%i
 
-@ rem apperently not.. check if we have SOPC_KIT_NIOS2
+@ rem check if SOPC_KIT_NIOS2 is set
 @ cd %SOPC_KIT_NIOS2% 2> tmp.txt
 @ if %errorlevel% equ 0 (
-	@ cd ..
-	@ for /f %%i in ('cd') do set nios=%%i
-	@ cd "%past%"
+	 %SOPC_KIT_NIOS2:~0,2%
+	 cd ..
+	 for /f %%i in ('cd') do set nios=%%i
+	 cd "%past%"
+	 %past:~0,2%
 	
-	@ goto exec_nios_shell
+	 goto exec_nios_shell
 )
 
-@ rem check if QUARTUS_ROOTDIR is set
+
+@ rem apperently not.. check if we have QUARTUS_ROOTDIR
 @ cd %QUARTUS_ROOTDIR% 2> tmp.txt
 @ if %errorlevel% equ 0 (
-	@ cd ..
-	@ for /f %%i in ('cd') do set nios=%%i
-	@ cd "%past%"
+	 %QUARTUS_ROOTDIR:~0,2%
+	 cd ..
+	 for /f %%i in ('cd') do set nios=%%i
+	 cd "%past%"
+	 %past:~0,2%
 	
-	@ goto exec_nios_shell
+	 goto exec_nios_shell
 )
 
 @ rem apperently not.. ask the user for the path...
@@ -30,12 +35,14 @@
 @ for /f %%i in ('%nios%\quartus\bin\cygwin\bin\pwd.exe') do set cyginst=%%i
 
 @ cd "%nios%" 2> tmp.txt
+@ %nios:~0,2%
 @ for /f %%i in ('%nios%\quartus\bin\cygwin\bin\pwd.exe') do set cygnios=%%i
 @ cd "%past%" 2> tmp.txt
+@ %past:~0,2%
 
 @ del tmp.txt
 
 @ echo Launching the Nios II Command Shell, please standby....
 
 @ rem execute the install script for great succes!
-"%nios%\nios2eds\Nios II Command Shell.bat" "%cyginst%/alt-freertos-lwip-do-install.sh" "%cygnios%" "%cyginst%"
+@"%nios%\nios2eds\Nios II Command Shell.bat" "%cyginst%/alt-freertos-lwip-do-install.sh" "%cygnios%" "%cyginst%"
