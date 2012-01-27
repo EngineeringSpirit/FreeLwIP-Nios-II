@@ -96,9 +96,9 @@ typedef u32_t							ipaddr_t;
 #define LWIP_PLATFORM_NTOHS(s)			(ntohs(s))
 
 // GCC packing is straight forward
-#define PACK_STRUCT_BEGIN				__attribute__((packed))
+#define PACK_STRUCT_BEGIN
 #define PACK_STRUCT_STRUCT
-#define PACK_STRUCT_END
+#define PACK_STRUCT_END					__attribute__((packed))
 #define PACK_STRUCT_FIELD(x)			x
 
 // Some GCC attributes for better readability
