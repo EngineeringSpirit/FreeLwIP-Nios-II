@@ -7,14 +7,14 @@
 create_os FreeRTOS
 
 # Set UI display name
-set_sw_property display_name "Real Time Engineers Ltd FreeRTOS 7.1.0"
+set_sw_property display_name "Real Time Engineers Ltd FreeRTOS 7.1.1"
 
 # This OS "extends" HAL BSP type
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
 # Note: this reflects the version of the Altera release that this file
-#       shipped in. The FreeRTOS version is 7.1.0
+#       shipped in. The FreeRTOS version is 7.1.1
 set_sw_property version 11.1
 
 # Location in generated BSP that above sources will be copied into

@@ -24,7 +24,7 @@ http://savannah.nongnu.org/patch/?7702
 Installation instructions:
 If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 
-1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.0)
+1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.1)
 2. Unzip the latest FreeRTOS source into FreeRTOS_src directory.
 3. Execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
 4. Follow the steps provided by the console.
@@ -32,7 +32,7 @@ If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 Howto test your FreeRTOS OS installation
 
 In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Board Support Package
-In the dialogue box that appears you should be able to select "Real Time Engineers Ltd FreeRTOS 7.1.0" if you choose a .sopcinfo file you should be able to build a BSP.
+In the dialogue box that appears you should be able to select "Real Time Engineers Ltd FreeRTOS 7.1.1" if you choose a .sopcinfo file you should be able to build a BSP.
 To test your application
 
 In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Application and BSP from Template

@@ -102,7 +102,7 @@ if [ $? -eq 255 ]; then
 			wget "http://downloads.sourceforge.net/project/freertos/FreeRTOS/${NEW_VERSION}/FreeRTOS${NEW_VERSION}.zip" -O FreeRTOS_src/FreeRTOS${NEW_VERSION}.zip;
 			cd FreeRTOS_src;
 			echo "Download done! Unpacking... please wait...";
-			unzip -o -qq FreeRTOS${NEW_VERSION}.zip;
+			unzip -o FreeRTOS${NEW_VERSION}.zip; # -qq
 			echo "Updating files...";
 			rm -r Demo License Source readme.txt 2> /dev/null;
 			mv FreeRTOS${NEW_VERSION}/* .;
