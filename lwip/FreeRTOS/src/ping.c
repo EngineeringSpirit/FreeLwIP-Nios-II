@@ -90,7 +90,7 @@ err_t ping_send(int s, ip_addr_t *addr, u8_t *data, u16_t size) {
 	// send the packet
 	err = sendto(s, iecho, total_size, 0, (struct sockaddr*)&to, sizeof(to));
 	if (err < 0)
-		LWIP_DEBUGF(PING_DEBUG, "Couldn't send ICMP Ping packet!\n");
+		LWIP_DEBUGF(PING_DEBUG, ("Couldn't send ICMP Ping packet!\n"));
 
 	// clear the ping object
 	mem_free(iecho);
@@ -162,7 +162,7 @@ int lwip_ping_target_data(u32_t addr, u8_t packets, int get_response, u8_t *data
 		return -EXIT_SUCCESS;
 
 	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
-		LWIP_DEBUGF(PING_DEBUG, "Couldn't set ping receive socket timeout\n");
+		LWIP_DEBUGF(PING_DEBUG, ("Couldn't set ping receive socket timeout\n"));
 
 	while (packets--) {
 		ping_target.addr = addr; // addr should already be converted with htonl just like normal socket operations

@@ -82,7 +82,7 @@ low_level_init(struct netif *netif)
 	/* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
 	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
-	tse_mac_init(0, ethernetif);
+	tse_mac_init(netif->num, ethernetif);
 }
 
 /**

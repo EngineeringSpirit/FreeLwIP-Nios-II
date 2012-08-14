@@ -71,12 +71,13 @@ static alt_alarm lwip_timer;
 static sys_sem_t lwip_timer_semaphore;
 #endif
 
+static int dhcp_running = 0;
+
 static netif_status_callback_fn status_callback = NULL;
 static netif_status_callback_fn link_callback = NULL;
 
 // our interface array, in case we want to support more then one PHY
-//static struct netif eth_tse[MAXNETS];
-static struct netif eth0_tse;
+static struct netif eth_tse[PHY_COUNT];
 
 // some private functions
 #if MY_TIMER
@@ -84,6 +85,7 @@ static void lwip_process_timers(void *args);
 #endif
 static void lwip_handle_interfaces(void *args);
 static void lwip_handle_ethernet_input(void *ethif);
+static void lwip_status_callback(struct netif *netif);
 
 #if MY_TIMER
 // Callback function which releases a semaphore for the timer task.
@@ -107,6 +109,8 @@ static __noinline alt_u32 lwip_timer_callback(__unused void* context)
 // Function which initializes the LwIP TCP/IP stack
 void lwip_initialize(void)
 {
+	int idx;
+
 #if MY_TIMER
 	// Setup the timer task needed for LwIP book keeping
 	// For that we need a semaphore
@@ -128,7 +132,8 @@ void lwip_initialize(void)
 	tcpip_init(lwip_handle_interfaces, NULL);
 
 	// Wait for the network to get up
-	while (!netif_is_up(&eth0_tse))
+	for (idx = 0; idx < PHY_COUNT; ++idx)
+		while (!netif_is_up(&eth_tse[idx]))
 		mssleep(10);
 }
 
@@ -195,67 +200,81 @@ static void lwip_process_timers(__unused void *params)
 
 void lwip_handle_interfaces(__unused void *params)
 {
+	int idx;
+	int active_macs = 0;
 	char tmpbuf[OS_MAX_TASK_NAME_LEN];
-
-	// TODO loop from 0 to MAXNETS
-	// TODO check if the MAC exists
-	// TODO if so execute code blow
 
 	ip_addr_t ip = {0}, subnet = {0}, gateway = {0};
 	int dhcp;
 
+	for (idx = 0; idx < PHY_COUNT; ++idx)
+	{
+		struct netif *eth = &eth_tse[idx];
+
 	// Load platform specific MAC address into netif
-	if (get_mac_addr(0, &eth0_tse, eth0_tse.hwaddr) != EXIT_SUCCESS)
+		if (get_mac_addr(idx, eth, eth->hwaddr) != EXIT_SUCCESS)
 		printf("[LwIP] Failed to get MAC address\n");
 
 	// Get the requested IP configuration for the given interface
-	if (get_ip_addr(0, &ip.addr, &subnet.addr, &gateway.addr, &dhcp) != EXIT_SUCCESS)
+		if (get_ip_addr(idx, &ip.addr, &subnet.addr, &gateway.addr, &dhcp) != EXIT_SUCCESS)
 		printf("[LwIP] Failed to get IP config\n");
 
 	//  Initialize lwIP, Altera TSE and the ethernetif
-#if NO_SYS
-	if (netif_add(&eth0_tse, &ip, &subnet, &gateway, eth0_tse.state, ethernetif_init, ethernet_input) == NULL)
-#else
-	if (netif_add(&eth0_tse, &ip, &subnet, &gateway, eth0_tse.state, ethernetif_init, tcpip_input) == NULL)
-#endif
+	#if NO_SYS
+		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, ethernet_input) == NULL)
+	#else
+		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, tcpip_input) == NULL)
+	#endif
 	{
-		printf( "Fatal error initializing...\n" );
-		for(;;);
+			printf("[eth%d] Fatal error initializing...\n", idx);
+			for(;;) ;
 	}
-	netif_set_default(&eth0_tse);
+
+		// check whether this interface should be used
+		if (!is_interface_active(idx))
+			continue;
+
+		// update the active phy count
+		++active_macs;
+
+		if (active_macs == 1)
+			netif_set_default(eth);
 
 	// Set status and link callback (link is not working?)
-	if (status_callback)
-		netif_set_status_callback(&eth0_tse, status_callback);
+		netif_set_status_callback(eth, lwip_status_callback);
 
 	if (link_callback)
-		netif_set_link_callback(&eth0_tse, link_callback);
+			netif_set_link_callback(eth, link_callback);
 
 	// Initialize Altera TSE in a loop if waiting for a link
 	printf("Waiting for link...");
-	while (((struct ethernetif *) eth0_tse.state)->link_alive != 1) {
+		while (((struct ethernetif *) eth->state)->link_alive != 1) {
 		mssleep(100);
 		putchar('.');
-		tse_mac_init(0, eth0_tse.state);
+			tse_mac_init(idx, eth->state);
 	}
 	printf("OK\n");
 
 	// create input output task and start DHCP or static w/e
-	snprintf(tmpbuf, OS_MAX_TASK_NAME_LEN, "LwIP %*sih", 2, eth0_tse.name);
+		snprintf(tmpbuf, OS_MAX_TASK_NAME_LEN, "LwIP %*sih", 2, eth->name);
 	tmpbuf[(OS_MAX_TASK_NAME_LEN - 1)] = 0;
 
 	// create input task, this must be started before we can do any DHCP request
-	if (sys_thread_new(tmpbuf, lwip_handle_ethernet_input, &eth0_tse, KB(32), TCPIP_THREAD_PRIO) == NULL)
+		if (sys_thread_new(tmpbuf, lwip_handle_ethernet_input, eth, KB(32), TCPIP_THREAD_PRIO) == NULL)
 		printf("LwIP Couldn't create input / output task for ethernet\n");
 
+		// wait previous DHCP to finish
 	if (dhcp) {
-		dhcp_start(&eth0_tse);
+			printf("[LwIP] Start DHCP request...\n");
+
+			dhcp_start(eth);
 
 		// wait till we got our address
 		printf("[LwIP] Waiting for DHCP IP address...\n");
 	} else {
 		// the static IP has already been set, just bring up the interface
-		netif_set_up(&eth0_tse);
+			netif_set_up(eth);
+	}
 	}
 }
 
@@ -307,9 +326,8 @@ static void lwip_handle_ethernet_input(void *pvParameters)
 	}
 }
 
-const char* print_ipad(alt_u32 ip)
+const char* print_ipad(alt_u32 ip, char* buf)
 {
-	static char buffer[17];
 	alt_u8 bip[4];
 	int idx = 0;
 
@@ -318,7 +336,15 @@ const char* print_ipad(alt_u32 ip)
 		ip >>= 8;
 	}
 
-	snprintf(buffer, 17, "%d.%d.%d.%d", bip[0], bip[1], bip[2], bip[3]);
+	snprintf(buf, 17, "%d.%d.%d.%d", bip[0], bip[1], bip[2], bip[3]);
 
-	return buffer;
+	return buf;
+}
+
+static void lwip_status_callback(struct netif *netif)
+{
+	if (status_callback)
+		status_callback(netif);
+
+	dhcp_running = 0;
 }

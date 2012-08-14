@@ -9,7 +9,7 @@ create_driver altera_nios2_qsys_freertos_driver
 set_sw_property hw_class_name altera_nios2_qsys
 
 # The version of this driver
-set_sw_property version 11.1
+set_sw_property version 12.0
 
 # This driver may be incompatible with versions of hardware less
 # than specified below. Updates to hardware and device drivers

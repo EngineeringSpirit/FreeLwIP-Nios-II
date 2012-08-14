@@ -34,6 +34,15 @@ extern "C" {
 #define ETH_IFACE_NAME_LENGTH		2
 
 /**
+ * \brief Callback function which checks if the current interface is active
+ *
+ * \param [in] iface the interface number
+ *
+ * \return wether the interface is active or not
+ */
+extern int is_interface_active(int iface);
+
+/**
  * \brief Callback function which should be implemented by the application.
  *
  * \param [in] iface the interface number
@@ -92,7 +101,7 @@ extern netif_status_callback_fn lwip_set_link_callback(netif_status_callback_fn 
  *
  * \return the pointer to the statically allocated buffer.
  */
-extern const char* print_ipad(alt_u32 ip);
+extern const char* print_ipad(alt_u32 ip, char* buf);
 
 /**
  * \brief The initializer of the LwIP TCP/IP stack

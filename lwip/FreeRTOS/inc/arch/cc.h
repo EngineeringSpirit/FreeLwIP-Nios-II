@@ -43,7 +43,8 @@
 #include <system.h>
 #include <alt_types.h>
 
-#define LWIP_NOASSERT					1
+//#define LWIP_NOASSERT					1
+#define LWIP_DEBUG						1
 
 // Set altera typedefs for LwIP (in-case someone chooses a word size different from 32bits)
 typedef alt_u8							u8_t;
@@ -97,8 +98,8 @@ typedef u32_t							ipaddr_t;
 
 // GCC packing is straight forward
 #define PACK_STRUCT_BEGIN
-#define PACK_STRUCT_STRUCT
-#define PACK_STRUCT_END					__attribute__((packed))
+#define PACK_STRUCT_STRUCT				__attribute__((packed))
+#define PACK_STRUCT_END
 #define PACK_STRUCT_FIELD(x)			x
 
 // Some GCC attributes for better readability
@@ -121,7 +122,7 @@ typedef u32_t							ipaddr_t;
 #endif
 
 // We use the default printf functionality from the BSP package
-# define LWIP_PLATFORM_DIAG(x)			do { printf(x); } while(0)
+# define LWIP_PLATFORM_DIAG(x)			do { printf x; } while(0)
 
 // TODO And we call exit (which calls ALT_EXIT on it's turn for nice process termination)
 # define LWIP_PLATFORM_ASSERT(x)		do { printf("[LwIP] Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); /* exit(1); */ } while(0)
