@@ -36,8 +36,12 @@ extern "C" {
 #define ETH_INTERFACE_UP			1
 #define ETH_INTERFACE_DOWN			0
 
+// -----------------------------------------------------------------------------------------
+// ------------------- functions which must be defined in the application ------------------
+// -----------------------------------------------------------------------------------------
+
 /**
- * \brief Callback function which checks if the current interface is active
+ * \brief Callback function which checks if the current interface is active and should be enabled by the stack
  *
  * \param [in] iface the interface number
  *
@@ -90,6 +94,10 @@ extern int get_hostname(int iface, const char **hostname);
  * \return the function must return 0 on success
  */
 extern int get_iface_name(int iface, char name[ETH_IFACE_NAME_LENGTH]);
+
+// -----------------------------------------------------------------------------------------
+// --------------------- functions which can be used by the application --------------------
+// -----------------------------------------------------------------------------------------
 
 /**
  * \brief Get the number of MAC's available in the NIOS build

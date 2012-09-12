@@ -37,3 +37,12 @@ To test your application
 
 In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Application and BSP from Template
 Here you should be able to select "FreeRTOS - LwIP Demo" and build a system.
+
+Changes for multiple PHY support:
+ Naming convension for network interfaces changed, now peripherals must be matched in this way (the 0 can be replaced by any value from 0 till 9):
+  - tse_mac_0
+  - sgdma_tse_rx_0
+  - sgdma_tse_tx_0
+  - tse_descriptor_memory_0
+
+Further more are there some changes in the application to BSP interface for ethernet handling. Please read 'lwip\FreeRTOS\inc\lwip_main.h' for more info.

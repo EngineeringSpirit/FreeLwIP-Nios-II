@@ -193,7 +193,7 @@ void xEthernetRun(__unused void* param)
 	return 0;
 }
 
-// callback wrapper for iniche to get the interface configurations
+// callback wrapper for lwip to get the interface configurations
 int get_mac_addr(int iface, struct netif* ethif, unsigned char mac_addr[6])
 {	
 	mac_addr[0] = 0x00;
@@ -211,7 +211,7 @@ int get_mac_addr(int iface, struct netif* ethif, unsigned char mac_addr[6])
 	return EXIT_SUCCESS;
 }
 
-// callback wrapper for iniche to get the IP configurations
+// callback wrapper for lwip to get the IP configurations
 int get_ip_addr(int iface, ip_addr_t* ipaddr, ip_addr_t* netmask, ip_addr_t* gw, int* use_dhcp)
 {
 	// set configuration
@@ -241,4 +241,9 @@ int get_iface_name(int iface, char name[ETH_IFACE_NAME_LENGTH])
 	name[1] = (iface + 0x30);
 
 	return ERR_OK;
+}
+
+int is_interface_active(int iface)
+{
+	return 1;
 }
