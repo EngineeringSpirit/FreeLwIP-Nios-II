@@ -359,6 +359,8 @@ int tse_sgdma_rx_isr(void * context, u_long intnum)
 	return SUCCESS;
 }
 
+#if 1 // Use the unpatched version of tse_mac_raw_send
+
 /* @Function Description -  TSE transmit API to send data to the MAC
  *                          
  * 
@@ -420,6 +422,92 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 	LINK_STATS_INC(link.xmit);
 	return ERR_OK;
 }
+
+#else
+
+// patch for SGDMA, provided by BillA but I don't use it yet because I've never seen
+// something go wrong
+
+/* @Function Description -  TSE transmit API to send data to the MAC
+ *
+ *
+ * @API TYPE - Public
+ * @param  net  - NET structure associated with the TSE MAC instance
+ * @param  data - pointer to the data payload
+ * @param  data_bytes - number of bytes of the data payload to be sent to the MAC
+ * @return SUCCESS if success, else a negative value
+ */
+
+err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
+{
+	int                tx_length;
+	unsigned           len;
+	struct pbuf        *p, *q = NULL;
+	alt_u32            *data;
+	tse_mac_trans_info *mi;
+	lwip_tse_info      *tse_ptr;
+	struct ethernetif  *ethernetif;
+	unsigned int       *ActualData;
+
+	/* Intermediate buffers used for temporary copy of frames that cannot be directrly DMA'ed*/
+	char buf2[1560];
+
+	ethernetif = netif->state;
+	tse_ptr = ethernetif->tse_info;
+	mi = &tse_ptr->mi;
+
+	if(pkt->next != NULL)        // Unwind pbuf chains
+	{
+		q = pbuf_alloc(PBUF_RAW, pkt->tot_len, pkt->type);
+		for(len = 0, p = pkt; p != NULL; p = p->next)
+		{
+			memcpy(q->payload + len, p->payload, p->len);
+			len += p->len;
+		}
+		pkt = q;
+	}
+
+	for(p = pkt; p != NULL; p = p->next)
+	{
+		data = p->payload;
+		len = p->len;
+
+		if(((unsigned long)data & 0x03) != 0)
+		{
+			/*
+			* Copy data to temporary buffer <buf2>. This is done because of allignment
+			* issues. The SGDMA cannot copy the data directly from (data + ETH_PAD_SIZE)
+			* because it needs a 32-bit alligned address space.
+			*/
+			memcpy(buf2,data,len);
+			data = (alt_u32 *)buf2;
+		}
+
+		ActualData = (void *)alt_remap_uncached (data, len<4 ? 4 : len);
+		printf("<%d @ 0x%08X/0x%08X>", len, (unsigned int)p->payload, (unsigned int)ActualData);
+		if(len<4)
+			len=4;
+		/* Write data to Tx FIFO using the DMA */
+		alt_avalon_sgdma_construct_mem_to_stream_desc(
+		(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST], // descriptor I want to work with
+		(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_SECOND_TX_SGDMA_DESC_OFST],// pointer to "next"
+		(alt_u32*)ActualData,                    // starting read address
+		(len),                                   // # bytes
+		0,                                       // don't read from constant address
+		p == pkt,                                // generate sop
+		p->next == NULL,                         // generate endofpacket signal
+		0);                                      // atlantic channel (don't know/don't care: set to 0)
+
+		tx_length = tse_mac_sTxWrite(mi,&tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST]);
+		ethernetif->bytes_sent += tx_length;
+	}
+	if(q != NULL)
+		pbuf_free(q);
+	LINK_STATS_INC(link.xmit);
+	return ERR_OK;
+}
+
+#endif
 
 /* @Function Description -  TSE Driver SGDMA RX ISR callback function
  *                          
