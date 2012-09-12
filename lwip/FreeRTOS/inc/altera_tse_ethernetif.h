@@ -60,7 +60,7 @@ typedef struct _lwip_tse_info
 #endif
 } lwip_tse_info;
 
-extern lwip_tse_info tse[MAXNETS];
+extern lwip_tse_info tse[PHY_COUNT];
 
 err_t ethernetif_init(struct netif *netif);
 void ethernetif_input(struct netif *netif);

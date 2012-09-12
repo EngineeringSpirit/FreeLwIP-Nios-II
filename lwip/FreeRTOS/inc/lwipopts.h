@@ -54,8 +54,6 @@
    -----------------------------------------------
 */
 
-#define LWIP_NOASSERT					1
-
 /**
  * SYS_LIGHTWEIGHT_PROT==1: if you want inter-task protection for certain
  * critical regions during buffer allocation, deallocation and memory
@@ -249,13 +247,13 @@
  * MEMP_NUM_NETBUF: the number of struct netbufs.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETBUF                 10
+#define MEMP_NUM_NETBUF                 ((CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN) * 4)
 
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETCONN                4
+#define MEMP_NUM_NETCONN                (CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN)
 
 /**
  * MEMP_NUM_TCPIP_MSG_API: the number of struct tcpip_msg, which are used
@@ -1134,7 +1132,7 @@
 /**
  * SO_REUSE==1: Enable SO_REUSEADDR option.
  */
-#define SO_REUSE                        		0 // was 1
+#define SO_REUSE                        		1
 
 /**
  * SO_REUSE_RXTOALL==1: Pass a copy of incoming broadcast/multicast packets
@@ -1452,7 +1450,7 @@
  * LWIP_DBG_TYPES_ON: A mask that can be used to globally enable/disable
  * debug messages of certain types.
  */
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+#define LWIP_DBG_TYPES_ON               LWIP_DBG_OFF
 
 /**
  * ETHARP_DEBUG: Enable debugging in etharp.c.

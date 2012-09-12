@@ -43,8 +43,8 @@
 #include <system.h>
 #include <alt_types.h>
 
-//#define LWIP_NOASSERT					1
-#define LWIP_DEBUG						1
+#define LWIP_NOASSERT					1
+//#define LWIP_DEBUG						1
 
 // Set altera typedefs for LwIP (in-case someone chooses a word size different from 32bits)
 typedef alt_u8							u8_t;
@@ -125,7 +125,7 @@ typedef u32_t							ipaddr_t;
 # define LWIP_PLATFORM_DIAG(x)			do { printf x; } while(0)
 
 // TODO And we call exit (which calls ALT_EXIT on it's turn for nice process termination)
-# define LWIP_PLATFORM_ASSERT(x)		do { printf("[LwIP] Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); /* exit(1); */ } while(0)
+# define LWIP_PLATFORM_ASSERT(x)		do { printf("[LwIP] Assertion \"%s\" failed at line %d in %s\n", x, __LINE__, __FILE__); while (1); /* exit(1); */ } while(0)
 
 // Redefine memory align functionality
 #define LWIP_MEM_ALIGN(addr)			((void *)((((mem_ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(mem_ptr_t)(MEM_ALIGNMENT-1))))

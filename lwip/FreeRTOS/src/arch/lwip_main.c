@@ -65,13 +65,14 @@
 
 #define MY_TIMER					1
 
+/* Definition of TSE system */
+extern alt_tse_system_info tse_mac_device[MAXNETS];
+
 // timer variables
 #if MY_TIMER
 static alt_alarm lwip_timer;
 static sys_sem_t lwip_timer_semaphore;
 #endif
-
-static int dhcp_running = 0;
 
 static netif_status_callback_fn status_callback = NULL;
 static netif_status_callback_fn link_callback = NULL;
@@ -133,7 +134,7 @@ void lwip_initialize(void)
 
 	// Wait for the network to get up
 	for (idx = 0; idx < PHY_COUNT; ++idx)
-		while (!netif_is_up(&eth_tse[idx]))
+		while (is_interface_active(idx) && !netif_is_up(&eth_tse[idx]))
 		mssleep(10);
 }
 
@@ -220,11 +221,11 @@ void lwip_handle_interfaces(__unused void *params)
 		printf("[LwIP] Failed to get IP config\n");
 
 	//  Initialize lwIP, Altera TSE and the ethernetif
-	#if NO_SYS
+#if NO_SYS
 		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, ethernet_input) == NULL)
-	#else
+#else
 		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, tcpip_input) == NULL)
-	#endif
+#endif
 	{
 			printf("[eth%d] Fatal error initializing...\n", idx);
 			for(;;) ;
@@ -278,6 +279,31 @@ void lwip_handle_interfaces(__unused void *params)
 	}
 }
 
+/**
+ * \brief Get the number of MAC's available in the NIOS build
+ *
+ * \returns the number of MAC's in the NIOS build
+ */
+int get_mac_count(void)
+{
+	return PHY_COUNT;
+}
+
+/**
+ * \brief Get the base address of the MAC
+ *
+ * \param [in] idx the index of the MAC
+ *
+ * \returns the base address of the MAC
+ */
+volatile np_tse_mac* get_mac_base(int idx)
+{
+	if (idx > PHY_COUNT)
+		return NULL;
+
+	return (volatile np_tse_mac*)tse_mac_device[idx].tse_mac_base;
+}
+
 netif_status_callback_fn lwip_set_status_callback(netif_status_callback_fn callback)
 {
 	netif_status_callback_fn old = status_callback;
@@ -296,15 +322,29 @@ netif_status_callback_fn lwip_set_link_callback(netif_status_callback_fn callbac
 	return old;
 }
 
+int __attribute__((weak)) lwip_is_interface_up(np_tse_mac* pmac)
+{
+	return ETH_INTERFACE_UP;
+}
+
 // Input task per ethernet device
 static void lwip_handle_ethernet_input(void *pvParameters)
 {
+	int prev_status;
+	int cur_status;
 	sys_sem_t rcvsem = NULL;
-
+	np_tse_mac* base = NULL;
+	
 #if LWIP_RECEIVE_SEMAPHORE
 	rcvsem = ((struct ethernetif*)((struct netif*)pvParameters)->state)->tse_info->rx_semaphore;
 #endif
 
+	base = get_mac_base(((struct netif*)pvParameters)->num);
+	if (!base)
+		return;
+
+	prev_status = lwip_is_interface_up(base);
+		
 	// if we have a semaphore we'll wait for the semaphore
 	// else we'll poll the function once every 10ms
 	if (rcvsem) {
@@ -312,10 +352,22 @@ static void lwip_handle_ethernet_input(void *pvParameters)
 			// wait for the semaphore to be released by the SGDMA IRQ
 			// if we timeout also call ethernetif_input although most likely it would be useless
 			sys_arch_sem_wait(&rcvsem, 5);
-
+			
 			// Use semaphore or the timeout to call ethernet_input
 			// this to avoid unnecessary load and faster responses ;)
 			ethernetif_input(pvParameters);
+			
+			// check if the interface is up
+			cur_status = lwip_is_interface_up(base);
+			if (cur_status != prev_status)
+			{
+				if (cur_status == ETH_INTERFACE_UP)
+					netif_set_link_up((struct netif*)pvParameters);
+				else
+					netif_set_link_down((struct netif*)pvParameters);
+
+				prev_status = cur_status;
+			}
 		}
 	} else {
 		while (1) {
@@ -345,6 +397,4 @@ static void lwip_status_callback(struct netif *netif)
 {
 	if (status_callback)
 		status_callback(netif);
-
-	dhcp_running = 0;
 }

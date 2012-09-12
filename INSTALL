@@ -3,7 +3,7 @@ Howto install the new FreeRTOS BSP and the LwIP...?
 Installation instructions:
 If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 
-1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.1.1)
+1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.2.0)
 2. Unzip the latest FreeRTOS source into FreeRTOS_src directory.
 3. Execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
 4. Follow the steps provided by the console.

@@ -70,8 +70,8 @@ int tse_mac_rcv(struct ethernetif *ethernetif);
 extern int ALTERA_TSE_IRQ_R(void * context, u_long intnum);
 #endif
 
-lwip_tse_info tse[MAXNETS];
-extern alt_tse_system_info tse_mac_device[MAXNETS];
+lwip_tse_info tse[PHY_COUNT];
+extern alt_tse_system_info tse_mac_device[PHY_COUNT];
 
 /* @Function Description: TSE MAC Initialization routine. This function opens the
  *                        device handle, configure the callback function and interrupts ,

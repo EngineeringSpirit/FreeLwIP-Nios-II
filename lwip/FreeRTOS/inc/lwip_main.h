@@ -33,6 +33,9 @@ extern "C" {
 
 #define ETH_IFACE_NAME_LENGTH		2
 
+#define ETH_INTERFACE_UP			1
+#define ETH_INTERFACE_DOWN			0
+
 /**
  * \brief Callback function which checks if the current interface is active
  *
@@ -87,6 +90,22 @@ extern int get_hostname(int iface, const char **hostname);
  * \return the function must return 0 on success
  */
 extern int get_iface_name(int iface, char name[ETH_IFACE_NAME_LENGTH]);
+
+/**
+ * \brief Get the number of MAC's available in the NIOS build
+ *
+ * \returns the number of MAC's in the NIOS build
+ */
+extern int get_mac_count(void);
+
+/**
+ * \brief Get the base address of the MAC
+ *
+ * \param [in] idx the index of the MAC
+ *
+ * \returns the base address of the MAC
+ */
+extern volatile np_tse_mac* get_mac_base(int idx);
 
 /**
  * \brief set status callback functions when network stats change.

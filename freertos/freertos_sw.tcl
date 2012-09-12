@@ -35,6 +35,7 @@ set_sw_property isr_preemption_supported true
 # C source files
 add_sw_property c_source FreeRTOS/src/alt_env_lock.c
 add_sw_property c_source FreeRTOS/src/alt_malloc_lock.c
+add_sw_property c_source FreeRTOS/src/alt_main.c
 add_sw_property c_source FreeRTOS/src/croutine.c
 add_sw_property c_source FreeRTOS/src/heap_3.c
 add_sw_property c_source FreeRTOS/src/list.c
@@ -72,6 +73,7 @@ add_sw_property excluded_hal_source HAL/src/alt_malloc_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_exception_entry.S
 add_sw_property excluded_hal_source HAL/src/alt_exception_trap.S
 add_sw_property excluded_hal_source HAL/src/alt_irq_entry.S
+add_sw_property excluded_hal_source HAL/src/alt_main.c
 add_sw_property excluded_hal_source HAL/src/alt_software_exception.S
 add_sw_property excluded_hal_source HAL/inc/os/alt_flag.h
 add_sw_property excluded_hal_source HAL/inc/os/alt_hooks.h

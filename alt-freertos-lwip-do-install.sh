@@ -25,7 +25,7 @@
 # header
 cat << EOF
 /***************************************************************************\ 
-| Welcome to the FreeRTOS v7.1.0 with LwIP 1.4.0 installer!                 |
+| Welcome to the FreeRTOS v7.2.0 with LwIP 1.4.0 installer!                 |
 | This installer will will create an FreeRTOS BSP and LwIP software package |
 | into your Nios II IDE. We'll also create a Demo application which you can |
 | chose in your IDE to see how to work with this type of BSP / TCP/IP stack |
@@ -102,11 +102,10 @@ if [ $? -eq 255 ]; then
 			wget "http://downloads.sourceforge.net/project/freertos/FreeRTOS/${NEW_VERSION}/FreeRTOS${NEW_VERSION}.zip" -O FreeRTOS_src/FreeRTOS${NEW_VERSION}.zip;
 			cd FreeRTOS_src;
 			echo "Download done! Unpacking... please wait...";
-			unzip -o FreeRTOS${NEW_VERSION}.zip; # -qq
+			unzip -qq -o FreeRTOS${NEW_VERSION}.zip; # -qq
 			echo "Updating files...";
 			rm -r Demo License Source readme.txt 2> /dev/null;
-			mv FreeRTOS${NEW_VERSION}/* .;
-			rm FreeRTOS${NEW_VERSION}.zip;
+			mv FreeRTOS${NEW_VERSION}/FreeRTOS/* .;
 			rm -r FreeRTOS${NEW_VERSION} FreeRTOS${NEW_VERSION}.zip;
 			cd ..;
 			echo ${NEW_VERSION} > FreeRTOS_src/.cur_version;
