@@ -64,7 +64,7 @@
 # Save the entire context of a task.
 save_context:
 	addi	ea, ea, -4			# Point to the next instruction.
-	addi	sp,	sp, -116		# Create space on the stack.
+	addi	sp,	sp, -120		# Create space on the stack.
 	stw		ra, 0(sp)
 								# Leave a gap for muldiv 0
 	stw		at, 8(sp)		 
@@ -95,6 +95,11 @@ save_context:
 	stw		r23, 104(sp)
 	stw		gp, 108(sp)
 	stw		fp, 112(sp)
+
+	# preserve the errno
+	call	__errno				# get the errno pointer
+	ldw		r3, 0(r2)			# load the errno in r3
+	stw		r3, 116(sp)			# store the errno on the stack
 
 save_sp_to_pxCurrentTCB:
 	call	xTaskGetSchedulerState			# Only save the stack if scheduler has been started
@@ -131,10 +136,16 @@ restore_sp_from_pxCurrentTCB:
 	ldw		sp, (et)						# Load the stack pointer with the top value of the TCB
 
 restore_context:
+	# preserve the errno
+	call	__errno			# get the errno pointer
+	ldw		r3, 116(sp)		# get errno from the stack
+	stw		r3, 0(r2)		# restore the global errno for this task
+
 	ldw		ra, 0(sp)		# Restore the registers.
 							# Leave a gap for muldiv 0.
 	ldw		at, 8(sp)
-	ldw		r2, 12(sp)
+
+	ldw		r2, 12(sp)		# now restore r2 from the stack
 	ldw		r3, 16(sp)
 	ldw		r4, 20(sp)
 	ldw		r5, 24(sp) 
@@ -161,7 +172,7 @@ restore_context:
 	ldw		r23, 104(sp)
 	ldw		gp, 108(sp)
 	ldw		fp, 112(sp)
-	addi	sp,	sp, 116		# Release stack space
+	addi	sp,	sp, 120		# Release stack space
 
     eret					# Return to address ea, loading eStatus into Status.
    
