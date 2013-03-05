@@ -63,7 +63,7 @@
 
 #define mssleep(x)					usleep((x) * 1000)
 
-#define MY_TIMER					1
+#define MY_TIMER					0
 
 /* Definition of TSE system */
 extern alt_tse_system_info tse_mac_device[MAXNETS];
@@ -97,20 +97,22 @@ static __noinline alt_u32 lwip_timer_callback(__unused void* context)
 	portBASE_TYPE switch_context = 0;
 
 	// release the semaphore and check if a task with a higher priority then the current one is waiting for it
-    xSemaphoreGiveFromISR(lwip_timer_semaphore, &switch_context);
+	xSemaphoreGiveFromISR(lwip_timer_semaphore, &switch_context);
 
-    // force context switch if needed
-    portEND_SWITCHING_ISR(switch_context);
+	// force context switch if needed
+	portEND_SWITCHING_ISR(switch_context);
 
-    // return the amount of ticks we need to wait
-    return TCP_TIMER_MS;
+	// return the amount of ticks we need to wait
+	return TCP_TIMER_MS;
 }
 #endif
 
 // Function which initializes the LwIP TCP/IP stack
-void lwip_initialize(void)
+void lwip_initialize(int waitForAll)
 {
 	int idx;
+	int upCount = 0;
+	int activeCount = 0;
 
 #if MY_TIMER
 	// Setup the timer task needed for LwIP book keeping
@@ -132,10 +134,24 @@ void lwip_initialize(void)
 	// Initialize the TCP/IP stack and give our configuration function as callback
 	tcpip_init(lwip_handle_interfaces, NULL);
 
-	// Wait for the network to get up
 	for (idx = 0; idx < PHY_COUNT; ++idx)
-		while (is_interface_active(idx) && !netif_is_up(&eth_tse[idx]))
+		if (is_interface_active(idx))
+			++activeCount;
+
+	// Wait for the network to get up
+	while ((waitForAll && activeCount != upCount) || (!waitForAll && !upCount))
+	{
+		for (idx = 0; idx < PHY_COUNT; ++idx)
+		{
+			if (is_interface_active(idx) && netif_is_up(&eth_tse[idx]))
+			{
+				printf("[lwip_eth%d] up\r\n", idx);
+				++upCount;
+			}
+		}
+
 		mssleep(10);
+	}
 }
 
 #if MY_TIMER
@@ -199,6 +215,20 @@ static void lwip_process_timers(__unused void *params)
 }
 #endif
 
+#define MAX_RETRY_COUNT			3
+
+int lwip_wait_for_an(int idx, struct ethernetif *ethernetif)
+{
+	int retryCount = MAX_RETRY_COUNT;
+
+	while (ethernetif->link_alive != 1 && --retryCount) {
+		mssleep(100 * (MAX_RETRY_COUNT - retryCount));
+		tse_mac_init(idx, ethernetif);
+	}
+
+	return retryCount;
+}
+
 void lwip_handle_interfaces(__unused void *params)
 {
 	int idx;
@@ -212,24 +242,24 @@ void lwip_handle_interfaces(__unused void *params)
 	{
 		struct netif *eth = &eth_tse[idx];
 
-	// Load platform specific MAC address into netif
+		// Load platform specific MAC address into netif
 		if (get_mac_addr(idx, eth, eth->hwaddr) != EXIT_SUCCESS)
-		printf("[LwIP] Failed to get MAC address\n");
+			printf("[LwIP] Failed to get MAC address\n");
 
-	// Get the requested IP configuration for the given interface
-		if (get_ip_addr(idx, &ip.addr, &subnet.addr, &gateway.addr, &dhcp) != EXIT_SUCCESS)
-		printf("[LwIP] Failed to get IP config\n");
+		// Get the requested IP configuration for the given interface
+		if (get_ip_addr(idx, &ip, &subnet, &gateway, &dhcp) != EXIT_SUCCESS)
+			printf("[LwIP] Failed to get IP config\n");
 
-	//  Initialize lwIP, Altera TSE and the ethernetif
+		//  Initialize lwIP, Altera TSE and the ethernetif
 #if NO_SYS
 		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, ethernet_input) == NULL)
 #else
-		if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, tcpip_input) == NULL)
+			if (netif_add(eth, &ip, &subnet, &gateway, eth->state, ethernetif_init, tcpip_input) == NULL)
 #endif
-	{
-			printf("[eth%d] Fatal error initializing...\n", idx);
-			for(;;) ;
-	}
+			{
+				printf("[eth%d] Fatal error initializing...\n", idx);
+				for(;;) ;
+			}
 
 		// check whether this interface should be used
 		if (!is_interface_active(idx))
@@ -241,41 +271,41 @@ void lwip_handle_interfaces(__unused void *params)
 		if (active_macs == 1)
 			netif_set_default(eth);
 
-	// Set status and link callback (link is not working?)
+		// Set status and link callback (link is not working?)
 		netif_set_status_callback(eth, lwip_status_callback);
 
-	if (link_callback)
+		if (link_callback)
 			netif_set_link_callback(eth, link_callback);
 
-	// Initialize Altera TSE in a loop if waiting for a link
-	printf("Waiting for link...");
-		while (((struct ethernetif *) eth->state)->link_alive != 1) {
-		mssleep(100);
-		putchar('.');
-			tse_mac_init(idx, eth->state);
-	}
-	printf("OK\n");
+		// Initialize Altera TSE in a loop if waiting for a link
+		printf("Waiting for link... ");
+		if (lwip_wait_for_an(idx, eth->state) < 0) {
+			printf("FAILED\n");
+			continue;
+		}
 
-	// create input output task and start DHCP or static w/e
+		printf("OK\n");
+
+		// create input output task and start DHCP or static w/e
 		snprintf(tmpbuf, OS_MAX_TASK_NAME_LEN, "LwIP %*sih", 2, eth->name);
-	tmpbuf[(OS_MAX_TASK_NAME_LEN - 1)] = 0;
+		tmpbuf[(OS_MAX_TASK_NAME_LEN - 1)] = 0;
 
-	// create input task, this must be started before we can do any DHCP request
+		// create input task, this must be started before we can do any DHCP request
 		if (sys_thread_new(tmpbuf, lwip_handle_ethernet_input, eth, KB(32), TCPIP_THREAD_PRIO) == NULL)
-		printf("LwIP Couldn't create input / output task for ethernet\n");
+			printf("LwIP Couldn't create input / output task for ethernet\n");
 
 		// wait previous DHCP to finish
-	if (dhcp) {
+		if (dhcp) {
 			printf("[LwIP] Start DHCP request...\n");
 
 			dhcp_start(eth);
 
-		// wait till we got our address
-		printf("[LwIP] Waiting for DHCP IP address...\n");
-	} else {
-		// the static IP has already been set, just bring up the interface
+			// wait till we got our address
+			printf("[LwIP] Waiting for DHCP IP address...\n");
+		} else {
+			// the static IP has already been set, just bring up the interface
 			netif_set_up(eth);
-	}
+		}
 	}
 }
 
@@ -322,66 +352,97 @@ netif_status_callback_fn lwip_set_link_callback(netif_status_callback_fn callbac
 	return old;
 }
 
-int __attribute__((weak)) lwip_is_interface_up(np_tse_mac* pmac)
+int __attribute__((weak)) lwip_is_interface_up(__unused np_tse_mac* pmac)
 {
 	return ETH_INTERFACE_UP;
 }
 
-// Input task per ethernet device
+static void lwip_check_link_status(struct netif *netif, np_tse_mac* base)
+{
+	struct ethernetif *ethif = (struct ethernetif*)netif->state;
+
+	// check if the interface is up
+	int cur_status = lwip_is_interface_up(base);
+
+	// is there a state change in the ethernet connectivity
+	if (cur_status != ethif->current_state)
+	{
+		// check if the Auto-Negotiate is successful
+		if (cur_status == ETH_INTERFACE_UP)
+		{
+			// wait for auto-negotiate...
+			if (lwip_wait_for_an(netif->num, ethif) > 0)
+			{
+				netif_set_link_up(netif);
+				ethif->current_state = cur_status;
+			}
+		}
+		else
+		{
+			// bring down the link
+			ethif->link_alive = 0;
+
+			netif_set_link_down(netif);
+			ethif->current_state = cur_status;
+		}
+	}
+}
+
+alt_u32 tx_counter = 0;
+alt_u32 rx_counter = 0;
+
+alt_u32 rx_missed_packets = 0;
+alt_u32 rx_faulty_packets = 0;
+
+#define NR_TEST_PACKETS						50000
+
+// Input / monitor task per ethernet device
 static void lwip_handle_ethernet_input(void *pvParameters)
 {
-	int prev_status;
-	int cur_status;
 	sys_sem_t rcvsem = NULL;
 	np_tse_mac* base = NULL;
-	
+	struct netif *cur_netif = (struct netif*)pvParameters;
+	struct ethernetif *cur_ethif = (struct ethernetif*)cur_netif->state;
+	int packets_waiting = 0;
+
+	/* Intermediate buffers used for temporary copy of frames that cannot be directrly DMA'ed*/
+	char buf2[1560]; // TODO remove
+	int replug_state = 0; // TODO remove
+
 #if LWIP_RECEIVE_SEMAPHORE
-	rcvsem = ((struct ethernetif*)((struct netif*)pvParameters)->state)->tse_info->rx_semaphore;
+	rcvsem = cur_ethif->tse_info->rx_semaphore;
 #endif
 
-	base = get_mac_base(((struct netif*)pvParameters)->num);
+	// get the actual MAC peripheral
+	base = get_mac_base(cur_netif->num);
 	if (!base)
 		return;
 
-	prev_status = lwip_is_interface_up(base);
-		
 	// if we have a semaphore we'll wait for the semaphore
-	// else we'll poll the function once every 10ms
-	if (rcvsem) {
+	// else we'll poll the function once every 100ms
 		while (1) {
-			// wait for the semaphore to be released by the SGDMA IRQ
+		// if we have a semaphore wait for it to be released by the SGDMA IRQ, or sleep for 1 ms
 			// if we timeout also call ethernetif_input although most likely it would be useless
-			sys_arch_sem_wait(&rcvsem, 5);
-			
+			// it is use full however to check the link status
+		if (rcvsem)
+			sys_arch_sem_wait(&rcvsem, 100);
+		else if (packets_waiting <= 0)	// only sleep if there are no packets waiting
+			mssleep(1);					// sleep a bit to be nice to the CPU
+
 			// Use semaphore or the timeout to call ethernet_input
 			// this to avoid unnecessary load and faster responses ;)
-			ethernetif_input(pvParameters);
-			
-			// check if the interface is up
-			cur_status = lwip_is_interface_up(base);
-			if (cur_status != prev_status)
-			{
-				if (cur_status == ETH_INTERFACE_UP)
-					netif_set_link_up((struct netif*)pvParameters);
-				else
-					netif_set_link_down((struct netif*)pvParameters);
+		packets_waiting = ethernetif_input(cur_netif);
 
-				prev_status = cur_status;
-			}
-		}
-	} else {
-		while (1) {
-			ethernetif_input(pvParameters);
-
-			mssleep(5);
-		}
+		// check the link status if there are no packets waiting
+		if (packets_waiting <= 0)
+			lwip_check_link_status(cur_netif, base);
 	}
 }
 
 const char* print_ipad(alt_u32 ip, char* buf)
 {
 	alt_u8 bip[4];
-	int idx = 0;
+	alt_u32 idx = 0;
 
 	for (; idx < sizeof(bip); idx++) {
 		bip[idx] = ip & 0xFF;
@@ -397,4 +458,65 @@ static void lwip_status_callback(struct netif *netif)
 {
 	if (status_callback)
 		status_callback(netif);
+}
+
+void lwip_initialize_phys(void)
+{
+	int idx, phyadd, phyid, phyid2;
+	np_tse_mac *pmac;
+
+	for (idx = 0; idx < PHY_COUNT; ++idx)
+	{
+		// check whether this interface should be used
+		if (!is_interface_active(idx))
+			continue;
+
+		// the PHY is active... let's get the mac base
+		pmac = get_mac_base(idx);
+		if (!pmac)
+			continue;
+
+		// search the PHY and it's ID
+		for (phyadd = 0x00; phyadd < 0x20; ++phyadd)
+		{
+			IOWR(&pmac->MDIO_ADDR1, 0, phyadd);
+
+			phyid = IORD(&pmac->mdio1.PHY_ID1, 0);
+			phyid2 = IORD(&pmac->mdio1.PHY_ID2, 0);
+
+			if (phyid != phyid2)
+				break;
+		}
+
+		// if we have the PHY we can initialize it if we can find the driver in the pphy_profiles array
+		if (phyid != phyid2)
+		{
+            extern alt_tse_phy_profile *pphy_profiles[];
+            extern alt_u8 phy_profile_count;
+
+            int i;
+
+            for(i = 0; i < phy_profile_count; i++) {
+                alt_u32 oui = (phyid << 6) | ((phyid2 >> 10) & 0x3f);
+                alt_u8 model_number = (phyid2 >> 4) & 0x3f;
+                // unused so far... alt_u8 revision_number = phyid2 & 0x0f;
+
+                // if PHY match with PHY in profile we can call the initialize function
+                if((pphy_profiles[i]->oui == oui) && (pphy_profiles[i]->model_number == model_number))
+                {
+                    if (pphy_profiles[i]->phy_cfg)
+                    {
+                    	// initialize the PHY
+                    	pphy_profiles[i]->phy_cfg(pmac);
+
+                    	// and restart the Auto-Negotiation
+                    	IOWR(&pmac->mdio1.CONTROL, 0, (PCS_CTL_an_enable | PCS_CTL_an_restart));
+                    }
+
+                    // and done for this PHY
+                    break;
+                }
+            }
+		}
+	}
 }

@@ -2,7 +2,7 @@
 # lwip_sw.tcl
 #
 # A description of the LwIP TCP/IP stack,
-# version 1.4.0, for use with the Nios II BSP tools
+# version 1.4.1, for use with the Nios II BSP tools
 #
 
 # Create a new software package named "LwIP"
@@ -10,8 +10,8 @@ create_sw_package lwip
 
 # The version of this software
 # Note: Version assignment is based on version of Nios II EDS that
-#       this was distributed with. The LwIP Stack version is v1.4.0
-set_sw_property version 11.1
+#       this was distributed with. The LwIP Stack version is v1.4.1
+set_sw_property version 12.0
 
 # (Don't) initialize the driver in alt_sys_init()
 set_sw_property auto_initialize false
@@ -89,10 +89,12 @@ add_sw_property c_source FreeRTOS/src/netif/ppp/randm.c
 add_sw_property c_source FreeRTOS/src/netif/ppp/vj.c
 
 # Include files
+add_sw_property include_source FreeRTOS/inc/altera_avalon_tse.h
 add_sw_property include_source FreeRTOS/inc/ping.h
 add_sw_property include_source FreeRTOS/inc/altera_tse_ethernetif.h
 add_sw_property include_source FreeRTOS/inc/lwipopts.h
 add_sw_property include_source FreeRTOS/inc/lwip_main.h
+add_sw_property include_source FreeRTOS/inc/triple_speed_ethernet_regs.h
 add_sw_property include_source FreeRTOS/inc/arch/cc.h
 add_sw_property include_source FreeRTOS/inc/arch/perf.h
 add_sw_property include_source FreeRTOS/inc/arch/sys_arch.h
@@ -161,6 +163,7 @@ add_sw_property include_directory inc/ipv4
 
 # Overriden HAL files
 add_sw_property excluded_hal_source HAL/inc/os/alt_syscall.h
+add_sw_property excluded_hal_source drivers/inc/altera_avalon_tse.h
 
 # This driver supports only FreeRTOS BSP (OS) type
 add_sw_property supported_bsp_type FreeRTOS
@@ -188,14 +191,14 @@ add_sw_setting boolean system_h_define proto.enable_udp CONF_LWIP_PROTO_UDP true
 add_sw_setting boolean system_h_define proto.enable_tcp CONF_LWIP_PROTO_TCP true "Enable TCP support"
 add_sw_setting boolean system_h_define proto.enable_dhcp CONF_LWIP_PROTO_DHCP true "Enable DHCP support"
 
-add_sw_setting decimal_number system_h_define connections.raw_pcb_count CONF_LWIP_RAW_PCB 4 "Number of raw sockets supported"
-add_sw_setting decimal_number system_h_define connections.udp_pcb_count CONF_LWIP_UDP_PCB 20 "Number of UDP sockets supported"
-add_sw_setting decimal_number system_h_define connections.tcp_pcb_count CONF_LWIP_TCP_PCB 20 "Number of TCP sockets supported"
+add_sw_setting decimal_number system_h_define connections.raw_pcb_count CONF_LWIP_RAW_PCB 0 "Number of raw sockets supported"
+add_sw_setting decimal_number system_h_define connections.udp_pcb_count CONF_LWIP_UDP_PCB 15 "Number of UDP sockets supported"
+add_sw_setting decimal_number system_h_define connections.tcp_pcb_count CONF_LWIP_TCP_PCB 15 "Number of TCP sockets supported"
 add_sw_setting decimal_number system_h_define connections.tcp_listen_pcb_count CONF_LWIP_TCP_PCB_LISTEN 10 "Number of TCP Listening sockets supported"
 
 add_sw_setting decimal_number system_h_define memory.mem_size CONF_LWIP_MEM_SIZE 32768 "Size of the memory poll"
 add_sw_setting boolean system_h_define memory.overflow_check CONF_LWIP_OVERFLOW_CHECK false "Do memory overflow checking"
-add_sw_setting decimal_number system_h_define memory.pbuf_count CONF_LWIP_PBUF_COUNT 64 "Number of packet buffers supported"
+add_sw_setting decimal_number system_h_define memory.pbuf_count CONF_LWIP_PBUF_COUNT 32 "Number of packet buffers supported"
 
 add_sw_setting boolean system_h_define loopback CONF_LWIP_LOOPBACK false "Loopback outgoing traffic to our selfs"
 add_sw_setting boolean system_h_define loopback_if CONF_LWIP_LOOPBACKIF false "Create a loopback interface 'lo'"

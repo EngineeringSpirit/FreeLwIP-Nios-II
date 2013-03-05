@@ -1,7 +1,7 @@
 Nios updated port for NiosEDS 11.0 and up
-Engineering Spirit (c) Jan-1-2012 
+Engineering Spirit (c) 2012 - 2013
 
-Update includes:
+We updated the Nios II FreeRTOS port with the following changes:
 Fixed bug report:
  - Nios II port bug when using -O3 or -Os - ID: 3037968
 Changed:
@@ -11,20 +11,17 @@ Changed:
 To use FreeRTOS as BSP the following hardware is required:
   (jtag_)uart or something ( this is where print message will end up)
   an sys_clk_timer (I'm running at 1ms, but any speed would be sufficient)
-  
+
 To run the provided demo (Only one included which uses FreeRTOS and LwIP) you would need to have an Triple Speed Ethernet addapter included in your Nios II blok.
-  Currently there is only one PHY supported, but multiple PHY's shouldn't be to hard to implement. The TSE_MAC should keep it's default name so far!
 
-Clearly if you want to change the code you can remove most of these restrictions. But these are the requirements for the "out of box" experience.
-
-!!! Note !!! - currently using: lwip-1.4.0
-The LwIP stack uses a modifed version of the socket API! If you want to update the LwIP version you should also apply this patch!
-http://savannah.nongnu.org/patch/?7702
+!!! Note !!! - currently using a modified version of the LwIP-1.4.1 TCP/IP stack
+ - The LwIP stack uses a modifed version of the socket API, which gives the sockets an offset, so we can let the HAL layer determent wether the read/write/flush calls should invoke the Altera HAL library or LwIP
+ - We also applied a patch for proper packet routing if multiple interfaces are in the same subnet. For incomming and outgoing, also when UDP broadcasts are received when both interfaces are on the same subnet, this is routed to both the packet handling of both interfaces instead of just the first.
 
 Installation instructions:
 If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 
-1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.2.0)
+1. Download the latest FreeRTOS kernel from www.freertos.org (currently v7.3.0)
 2. Unzip the latest FreeRTOS source into FreeRTOS_src directory.
 3. Execute alt-freertos-lwip-install.bat if your on windows or alt-freertos-lwip-install.sh if your on a unix like system.
 4. Follow the steps provided by the console.
@@ -32,7 +29,7 @@ If you are on a unix system and have wget and curl installed, skip step 1 and 2.
 Howto test your FreeRTOS OS installation
 
 In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Board Support Package
-In the dialogue box that appears you should be able to select "Real Time Engineers Ltd FreeRTOS 7.2.0" if you choose a .sopcinfo file you should be able to build a BSP.
+In the dialogue box that appears you should be able to select "Real Time Engineers Ltd FreeRTOS 7.3.0" if you choose a .sopcinfo file you should be able to build a BSP.
 To test your application
 
 In the Nios Software Build tools for eclipse, choose File ->New -> Nios II Application and BSP from Template
@@ -44,5 +41,7 @@ Changes for multiple PHY support:
   - sgdma_tse_rx_0
   - sgdma_tse_tx_0
   - tse_descriptor_memory_0
+
+Clearly if you want to change the code you can remove most of these restrictions. But these are the requirements for the "out of box" experience.
 
 Further more are there some changes in the application to BSP interface for ethernet handling. Please read 'lwip\FreeRTOS\inc\lwip_main.h' for more info.

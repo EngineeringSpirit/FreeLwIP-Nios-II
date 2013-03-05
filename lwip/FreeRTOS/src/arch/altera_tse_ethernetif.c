@@ -76,7 +76,7 @@ low_level_init(struct netif *netif)
 	netif->hwaddr_len = ETHARP_HWADDR_LEN;
 
 	/* maximum transfer unit */
-	netif->mtu = 1500;
+	netif->mtu = IP_FRAG_MAX_MTU;
 
 	/* device capabilities */
 	/* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
@@ -100,7 +100,7 @@ low_level_input(struct netif *netif)
 	struct pbuf *p, *nextPkt;
 	u32_t cpu_sr;
 
-	if(ethernetif->lwipRxCount == 0)
+	if(ethernetif->lwipRxCount <= 0)
 		return NULL;
 
 	//  Dump current packet if there is no memory for the next packet.
@@ -108,6 +108,8 @@ low_level_input(struct netif *netif)
 	nextPkt = pbuf_alloc(PBUF_RAW,  PBUF_POOL_BUFSIZE, PBUF_POOL);
 	if(nextPkt == NULL)
 	{
+		LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_LEVEL_WARNING, ("no pbuf available\n"));
+
 		LINK_STATS_INC(link.memerr);
 		LINK_STATS_INC(link.drop);
 		return NULL;
@@ -118,12 +120,12 @@ low_level_input(struct netif *netif)
 
 	cpu_sr = alt_irq_disable_all();
 
-	--ethernetif->lwipRxCount;
-
 	p = ethernetif->lwipRxPbuf[ethernetif->lwipRxIndex];
 	ethernetif->lwipRxPbuf[ethernetif->lwipRxIndex] = nextPkt;
 	if(++ethernetif->lwipRxIndex >= LWIP_RX_ETH_BUFFER)
 		ethernetif->lwipRxIndex = 0;
+
+	--ethernetif->lwipRxCount;
 
 	alt_irq_enable_all(cpu_sr);
 
@@ -145,7 +147,7 @@ low_level_input(struct netif *netif)
  *
  * @param netif the lwip network interface structure for this ethernetif
  */
-void
+int
 ethernetif_input(struct netif *netif)
 {
 	struct ethernetif *ethernetif;
@@ -158,7 +160,7 @@ ethernetif_input(struct netif *netif)
 	p = low_level_input(netif);
 
 	/* no packet could be read, silently ignore this */
-	if (p == NULL) return;
+	if (p == NULL) return -1;
 
 	/* points to packet payload, which starts with an Ethernet header */
 	ethhdr = p->payload;
@@ -189,19 +191,27 @@ ethernetif_input(struct netif *netif)
 		break;
 	}
 #else
-    switch (htons(ethhdr->type)) {
-    	/* IP packet? */
-    	case ETHTYPE_IP:
-    	case ETHTYPE_ARP:
-    		netif->input(p, netif);
-    		break;
+	switch (htons(ethhdr->type)) {
+	/* IP packet? */
+	case ETHTYPE_IP:
+	case ETHTYPE_ARP:
+#if PPPOE_SUPPORT
+	/* PPPoE packet? */
+	case ETHTYPE_PPPOEDISC:
+	case ETHTYPE_PPPOE:
+#endif /* PPPOE_SUPPORT */
+		netif->input(p, netif);
+		break;
 
-    	default:
-    		pbuf_free( p );
-    		p = NULL;
-    		break;
-    }
+	default:
+		pbuf_free( p );
+		p = NULL;
+		break;
+	}
 #endif
+
+	// return the waiting packet count
+	return ethernetif->lwipRxCount;
 }
 
 /**
@@ -229,7 +239,7 @@ ethernetif_init(struct netif *netif)
 
 	ethernetif = mem_malloc(sizeof(struct ethernetif));
 	if (ethernetif == NULL) {
-		LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: out of memory\n"));
+		LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_LEVEL_WARNING, ("ethernetif_init: out of memory\n"));
 		return ERR_MEM;
 	}
 
@@ -257,7 +267,7 @@ ethernetif_init(struct netif *netif)
 		netif->name[0] = 'e';
 		netif->name[1] = 't';
 	}
-	
+
 	/* We directly use etharp_output() here to save a function call.
 	 * You can instead declare your own function an call etharp_output()
 	 * from it if you have to do some checks before sending (e.g. if link
@@ -283,5 +293,6 @@ ethernetif_init(struct netif *netif)
 
 	/* initialize the low level hardware */
 	low_level_init(netif);
+
 	return ERR_OK;
 }

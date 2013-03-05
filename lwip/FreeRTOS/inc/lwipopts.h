@@ -213,7 +213,7 @@
  * MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_SEG                256
+#define MEMP_NUM_TCP_SEG                16
 
 /**
  * MEMP_NUM_REASSDATA: the number of simultaneously IP packets queued for
@@ -227,7 +227,7 @@
  * their destination address) to finish.
  * (requires the ARP_QUEUEING option)
  */
-#define MEMP_NUM_ARP_QUEUE              30
+#define MEMP_NUM_ARP_QUEUE              15
 
 /**
  * MEMP_NUM_IGMP_GROUP: The number of multicast groups whose network interfaces
@@ -247,7 +247,7 @@
  * MEMP_NUM_NETBUF: the number of struct netbufs.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETBUF                 ((CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN) * 4)
+#define MEMP_NUM_NETBUF                 (CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN)
 
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
@@ -267,7 +267,7 @@
  * for incoming packets. 
  * (only needed if you use tcpip.c)
  */
-#define MEMP_NUM_TCPIP_MSG_INPKT        8
+#define MEMP_NUM_TCPIP_MSG_INPKT        32 // TODO was 8
 
 /**
  * MEMP_NUM_SNMP_NODE: the number of leafs in the SNMP tree.
@@ -494,7 +494,7 @@
 /**
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
-#define LWIP_RAW                        1
+#define LWIP_RAW                        (MEMP_NUM_RAW_PCB > 0)
 
 /**
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
@@ -699,7 +699,7 @@
  * TCP_WND: The size of a TCP window.  This must be at least
  * (2 * TCP_MSS) for things to work well
  */
-#define TCP_WND                         (4 * TCP_MSS)
+#define TCP_WND                         8192 // (8 * TCP_MSS)
 
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
@@ -724,7 +724,7 @@
  * when opening a connection. For the transmit size, this MSS sets
  * an upper limit on the MSS advertised by the remote host.
  */
-#define TCP_MSS                         536
+#define TCP_MSS                         1460
 
 
 /**
@@ -1445,6 +1445,7 @@
  * messages are written.
  */
 #define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_ALL
+#define LWIP_DBG_FORCE_LEVEL			LWIP_DBG_LEVEL_WARNING
 
 /**
  * LWIP_DBG_TYPES_ON: A mask that can be used to globally enable/disable

@@ -33,6 +33,7 @@
 #define __LWIP_DEBUG_H__
 
 #include "lwip/arch.h"
+#include "lwip/opt.h"
 
 /** lower two bits indicate debug level
  * - 0 all
@@ -80,10 +81,11 @@
  */
 #define LWIP_DEBUGF(debug, message) do { \
                                if ( \
-                                   ((debug) & LWIP_DBG_ON) && \
+                                   (((debug) & LWIP_DBG_ON) && \
                                    ((debug) & LWIP_DBG_TYPES_ON) && \
-                                   ((s16_t)((debug) & LWIP_DBG_MASK_LEVEL) >= LWIP_DBG_MIN_LEVEL)) { \
-                                 LWIP_PLATFORM_DIAG(message); \
+                                   ((s16_t)((debug) & LWIP_DBG_MASK_LEVEL) >= LWIP_DBG_MIN_LEVEL)) || \
+                                   ((s16_t)((debug) & LWIP_DBG_MASK_LEVEL) >= LWIP_DBG_FORCE_LEVEL)) { \
+                                 LWIP_PLATFORM_DIAG(((s16_t)((debug) & LWIP_DBG_MASK_LEVEL)), message); \
                                  if ((debug) & LWIP_DBG_HALT) { \
                                    while(1); \
                                  } \

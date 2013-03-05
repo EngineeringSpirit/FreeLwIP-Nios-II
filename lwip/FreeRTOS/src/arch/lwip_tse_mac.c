@@ -60,7 +60,7 @@ int tse_sgdma_rx_isr(void * context, u_long intnum);
 int tse_sgdma_read_init(lwip_tse_info* tse_ptr);
 int tse_mac_rcv(struct ethernetif *ethernetif);
 
-#define dprintf(x) //tse_dprintf x
+#define dprintf(x) do { /* printf x */ } while (0)
 
 #if! defined( ETH_PAD_SIZE ) || ETH_PAD_SIZE != 2
 #error The Altera Triple Speed Ethernet lwIP driver requires '#define ETH_PAD_SIZE 2' in lwipopts.h
@@ -98,10 +98,10 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 
 #if LWIP_RECEIVE_SEMAPHORE
 	if (!tse[iface].rx_semaphore) {
-		dprintf("creating RX SGDMA semaphore\n");
+		dprintf(("creating RX SGDMA semaphore\n"));
 		// create a counting semaphore so we can 'release' the semaphore for each rx input buffer filled
 		if (sys_sem_new(&tse[iface].rx_semaphore, LWIP_RX_ETH_BUFFER) != ERR_OK) {
-			dprintf("[LwIP] Couldn't create the rx_semephore\n");
+			dprintf(("[LwIP] Couldn't create the rx_semephore\n"));
 		} else {
 			// we got a semaphore, completely lock it
 			for (x = 0; x < LWIP_RX_ETH_BUFFER; x++)
@@ -124,7 +124,9 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	ethernetif->tse_info = &tse[iface];
 
 	if (tse_hw->ext_desc_mem == 1)
+	{
 		tse[iface].desc = (alt_sgdma_descriptor *) tse_hw->desc_mem_base;
+	}
 	else
 	{
 		unsigned char *temp_desc = (unsigned char *)alt_uncached_malloc((4+ALTERA_TSE_SGDMA_RX_DESC_CHAIN_SIZE)*(sizeof(alt_sgdma_descriptor)));
@@ -137,14 +139,14 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	/* Get the Rx and Tx SGDMA addresses */
 	sgdma_tx_dev = alt_avalon_sgdma_open(tse_hw->tse_sgdma_tx);
 
-	if(!sgdma_tx_dev)
+	if (!sgdma_tx_dev)
 	{
 		dprintf(("[triple_speed_ethernet_init] Error opening TX SGDMA\n"));
 		return ENP_RESOURCE;
 	}
 
 	sgdma_rx_dev = alt_avalon_sgdma_open(tse_hw->tse_sgdma_rx);
-	if(!sgdma_rx_dev)
+	if (!sgdma_rx_dev)
 	{
 		dprintf(("[triple_speed_ethernet_init] Error opening RX SGDMA\n"));
 		return ENP_RESOURCE;
@@ -158,7 +160,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 			0);
 	mi_base = tse[iface].mi.base;
 
-	IOWR_ALTERA_AVALON_SGDMA_CONTROL(tse[iface].mi.rx_sgdma->base,ALTERA_AVALON_SGDMA_CONTROL_SOFTWARERESET_MSK);
+	IOWR_ALTERA_AVALON_SGDMA_CONTROL(tse[iface].mi.rx_sgdma->base, ALTERA_AVALON_SGDMA_CONTROL_SOFTWARERESET_MSK);
 	IOWR_ALTERA_AVALON_SGDMA_CONTROL(tse[iface].mi.rx_sgdma->base, 0x0);
 
 	/* reset the PHY if necessary */
@@ -172,19 +174,19 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 			mmac_cc_TX_ENA_mask |
 			mmac_cc_RX_ENA_mask);
 
-	x=0;
-	while(IORD_ALTERA_TSEMAC_CMD_CONFIG(tse[iface].mi.base) &
+	x = 0;
+	while (IORD_ALTERA_TSEMAC_CMD_CONFIG(tse[iface].mi.base) &
 			ALTERA_TSEMAC_CMD_SW_RESET_MSK)
 	{
 		if( x++ > 10000 )
 			break;
 	}
 
-	if(x >= 10000)
+	if (x >= 10000)
 		dprintf(("TSEMAC SW reset bit never cleared!\n"));
 
 	dat = IORD_ALTERA_TSEMAC_CMD_CONFIG(tse[iface].mi.base);
-	if( (dat & 0x03) != 0 )
+	if ( (dat & 0x03) != 0 )
 		dprintf(("WARN: RX/TX not disabled after reset... missing PHY clock? CMD_CONFIG=0x%08x\n", dat));
 	else
 		dprintf(("OK, x=%d, CMD_CONFIG=0x%08x\n", x, dat));
@@ -207,7 +209,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	 * check if the MAC supports the 16-bit shift option allowing us
 	 * to send BIASed frames without copying. Used by the send function later.
 	 */
-	if((IORD_ALTERA_TSEMAC_TX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK) == 0)
+	if ((IORD_ALTERA_TSEMAC_TX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK) == 0)
 	{
 		dprintf(("[tse_mac_init] Error: Incompatible %d value with TX_CMD_STAT register return TxShift16 value. \n",ETH_PAD_SIZE));
 		return ERR_IF;
@@ -217,7 +219,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(tse[iface].mi.base,ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
 
 	/* check if the MAC supports the 16-bit shift option at the RX CMD STATUS Register  */
-	if((IORD_ALTERA_TSEMAC_RX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK) == 0)
+	if ((IORD_ALTERA_TSEMAC_RX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK) == 0)
 	{
 		dprintf(("[tse_mac_init] Error: Incompatible %d value with RX_CMD_STAT register return RxShift16 value. \n",ETH_PAD_SIZE));
 		return ERR_IF;
@@ -245,7 +247,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 			ALTERA_TSEMAC_CMD_TX_ADDR_INS_MSK  |
 			ALTERA_TSEMAC_CMD_RX_ERR_DISC_MSK;  /* automatically discard frames with CRC errors */
 
-	if((result & ALT_TSE_E_AN_NOT_COMPLETE) == 0)
+	if ((result & ALT_TSE_E_AN_NOT_COMPLETE) == 0)
 	{
 		speed = (result >> 1) & 0x07;
 		duplex = result & 0x01;
@@ -296,8 +298,6 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	dprintf(("\nMAC post-initialization: CMD_CONFIG=0x%08x\n",
 			IORD_ALTERA_TSEMAC_CMD_CONFIG(tse[iface].mi.base)));
 
-
-
 	alt_avalon_sgdma_register_callback(tse[iface].mi.rx_sgdma,
 #ifndef ALTERA_TSE_IRQ_R
 			(alt_avalon_sgdma_callback)&tse_sgdma_rx_isr,
@@ -309,7 +309,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	tse_sgdma_read_init(&tse[iface]);
 	pmac_info = alt_tse_get_mac_info(mi_base);
 	alt_tse_phy_wr_mdio_addr(pmac_info->pphy_info, pmac_info->pphy_info->mdio_address);
-	ethernetif->link_alive = alt_tse_phy_rd_mdio_reg(pmac_info->pphy_info, TSE_PHY_MDIO_STATUS, TSE_PHY_MDIO_STATUS_AN_COMPLETE, 1) != 0;
+	ethernetif->link_alive = alt_tse_phy_rd_mdio_reg(pmac_info->pphy_info, TSE_PHY_MDIO_STATUS, TSE_PHY_MDIO_STATUS_AN_COMPLETE, 1) != 0;// && (((IORD(&(mi_base->mdio1.reg10), 0) >> 4) & 0xF) <= 3);
 	return ethernetif->link_alive;
 }
 
@@ -332,7 +332,6 @@ int tse_sgdma_read_init(lwip_tse_info* tse_ptr)
 			0,                                  // read until EOP
 			0);          // don't write to constant address
 
-
 	dprintf(("[tse_sgdma_read_init] RX descriptor chain desc (%d depth) created\n",0));
 
 	tse_mac_aRxRead( &tse_ptr->mi, &tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST]);
@@ -347,19 +346,27 @@ int tse_sgdma_read_init(lwip_tse_info* tse_ptr)
  * @param  context  - context of the TSE MAC instance
  * @param  intnum - temporary storage
  */
-int tse_sgdma_rx_isr(void * context, u_long intnum)
+int tse_sgdma_rx_isr(void * context, __unused u_long intnum)
 {
 	lwip_tse_info* tse_ptr = (lwip_tse_info *) context;
 
 	IOWR_ALTERA_AVALON_SGDMA_CONTROL(&tse_ptr->mi.rx_sgdma->base,ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
+
+	// process the newly received data and cycle to the next free pbuf for receive
 	tse_mac_rcv(tse_ptr->ethernetif);
+
+	// start a new async read transaction
 	tse_mac_aRxRead( &tse_ptr->mi, &tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST]);
+
 	IOWR_ALTERA_AVALON_SGDMA_CONTROL(&tse_ptr->mi.rx_sgdma->base, ALTERA_TSE_SGDMA_INTR_MASK);
 
 	return SUCCESS;
 }
 
 #if 1 // Use the unpatched version of tse_mac_raw_send
+
+#include <lwip/ip.h>
+#include <lwip/icmp.h>
 
 /* @Function Description -  TSE transmit API to send data to the MAC
  *                          
@@ -379,7 +386,7 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 	tse_mac_trans_info *mi;
 	lwip_tse_info      *tse_ptr;
 	struct ethernetif  *ethernetif;
-	unsigned int       *ActualData;
+	alt_u32			   *ActualData;
 
 	/* Intermediate buffers used for temporary copy of frames that cannot be directrly DMA'ed*/
 	char buf2[1560];
@@ -393,18 +400,21 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 		data = p->payload;
 		len = p->len;
 
+		// just in case we have an unaligned buffer, this should never occur
 		if(((unsigned long)data & 0x03) != 0)
 		{
 			/*
-			 * Copy data to temporary buffer <buf2>. This is done because of allignment
+			 * Copy data to temporary buffer <buf2>. This is done because of alignment
 			 * issues. The SGDMA cannot copy the data directly from (data + ETH_PAD_SIZE)
-			 * because it needs a 32-bit alligned address space.
+			 * because it needs a 32-bit aligned address space.
 			 */
 			memcpy(buf2,data,len);
 			data = (alt_u32 *)buf2;
 		}
 
+		// uncache the ethernet frame
 		ActualData = (void *)alt_remap_uncached (data, len);
+
 		/* Write data to Tx FIFO using the DMA */
 		alt_avalon_sgdma_construct_mem_to_stream_desc(
 				(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST], // descriptor I want to work with
@@ -417,9 +427,15 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 				0);                                      // atlantic channel (don't know/don't care: set to 0)
 
 		tx_length = tse_mac_sTxWrite(mi,&tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST]);
+
+		if (tx_length != p->len)
+			dprintf(("failed to send all bytes, send %d out of %d\r\n", tx_length, p->len));
+
 		ethernetif->bytes_sent += tx_length;
 	}
+
 	LINK_STATS_INC(link.xmit);
+
 	return ERR_OK;
 }
 
@@ -475,28 +491,28 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 		if(((unsigned long)data & 0x03) != 0)
 		{
 			/*
-			* Copy data to temporary buffer <buf2>. This is done because of allignment
-			* issues. The SGDMA cannot copy the data directly from (data + ETH_PAD_SIZE)
-			* because it needs a 32-bit alligned address space.
-			*/
+			 * Copy data to temporary buffer <buf2>. This is done because of allignment
+			 * issues. The SGDMA cannot copy the data directly from (data + ETH_PAD_SIZE)
+			 * because it needs a 32-bit alligned address space.
+			 */
 			memcpy(buf2,data,len);
 			data = (alt_u32 *)buf2;
 		}
 
 		ActualData = (void *)alt_remap_uncached (data, len<4 ? 4 : len);
-		printf("<%d @ 0x%08X/0x%08X>", len, (unsigned int)p->payload, (unsigned int)ActualData);
+		printf("<%d @ 0x%08X/0x%08X>\r\n", len, (unsigned int)p->payload, (unsigned int)ActualData);
 		if(len<4)
 			len=4;
 		/* Write data to Tx FIFO using the DMA */
 		alt_avalon_sgdma_construct_mem_to_stream_desc(
-		(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST], // descriptor I want to work with
-		(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_SECOND_TX_SGDMA_DESC_OFST],// pointer to "next"
-		(alt_u32*)ActualData,                    // starting read address
-		(len),                                   // # bytes
-		0,                                       // don't read from constant address
-		p == pkt,                                // generate sop
-		p->next == NULL,                         // generate endofpacket signal
-		0);                                      // atlantic channel (don't know/don't care: set to 0)
+				(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST], // descriptor I want to work with
+				(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_SECOND_TX_SGDMA_DESC_OFST],// pointer to "next"
+				(alt_u32*)ActualData,                    // starting read address
+				(len),                                   // # bytes
+				0,                                       // don't read from constant address
+				p == pkt,                                // generate sop
+				p->next == NULL,                         // generate endofpacket signal
+				0);                                      // atlantic channel (don't know/don't care: set to 0)
 
 		tx_length = tse_mac_sTxWrite(mi,&tse_ptr->desc[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST]);
 		ethernetif->bytes_sent += tx_length;
@@ -516,7 +532,11 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
  * @return SUCCESS on success
  */
 int tse_mac_rcv(struct ethernetif *ethernetif)
-{     
+{
+#if LWIP_RECEIVE_SEMAPHORE
+	signed portBASE_TYPE switch_context = 0;
+#endif
+
 	int pklen;
 	lwip_tse_info* tse_ptr;
 	alt_u32 *uncached_packet_payload;
@@ -529,39 +549,47 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 	p->len = pklen;
 	if ((IORD_ALTERA_TSE_SGDMA_DESC_STATUS(&tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST]) & ( ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_CRC_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_PARITY_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_OVERFLOW_MSK |ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_SYNC_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_UEOP_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_MEOP_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_MSOP_MSK )) == 0)
 	{
-		if( ethernetif->lwipRxCount > LWIP_RX_ETH_BUFFER )
+		u32_t cpu_sr = alt_irq_disable_all();
+
+		if (++ethernetif->lwipRxCount >= LWIP_RX_ETH_BUFFER)
 		{
 			LINK_STATS_INC(link.drop);
-			dprintf(("No free buffers for rx\n")); // TODO was dprintf
+			--ethernetif->lwipRxCount;
+
+			alt_irq_enable_all(cpu_sr);
+
+			dprintf(("No free buffers for RX on iface: %hhd\n", ethernetif->iface));
 		}
 		else
 		{
-			signed portBASE_TYPE switch_context = 0;
-
 			ethernetif->bytes_recv += pklen;
+
 			//  Set up DMA for the next pbuf in the buffer
-			++ethernetif->lwipRxCount;
-			if( ++ethernetif->lwipRxIndexIsr >= LWIP_RX_ETH_BUFFER )
+			if (++ethernetif->lwipRxIndexIsr >= LWIP_RX_ETH_BUFFER)
 				ethernetif->lwipRxIndexIsr = 0;
+
+			alt_irq_enable_all(cpu_sr);
 
 #if LWIP_RECEIVE_SEMAPHORE
 			// we can't use the LwIP sys_signal_sem since this can't be used in an ISR
 			// release the semaphore and check if a task with a higher priority then the current one is waiting for it
 			xSemaphoreGiveFromISR(ethernetif->tse_info->rx_semaphore, &switch_context);
-
-			// if it's waiting we will force a context switch so this task will run right away
-			portEND_SWITCHING_ISR(switch_context);
 #endif
 		}
 	}
 
 	uncached_packet_payload = (alt_u32 *) ethernetif->lwipRxPbuf[ethernetif->lwipRxIndexIsr]->payload;
 	alt_avalon_sgdma_construct_stream_to_mem_desc(
-			(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST],  // descriptor I want to work with
+			(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST],	// descriptor I want to work with
 			(alt_sgdma_descriptor *) &tse_ptr->desc[ALTERA_TSE_SECOND_RX_SGDMA_DESC_OFST],  // pointer to "next"
-			uncached_packet_payload,            // starting write_address
-			0,                                  // read until EOP
-			0);          // don't write to constant address
+			uncached_packet_payload,            											// starting write_address
+			0,                                  											// read until EOP
+			0);          																	// don't write to constant address
+
+#if LWIP_RECEIVE_SEMAPHORE
+	// if it's waiting we will force a context switch so this task will run right away
+	portEND_SWITCHING_ISR(switch_context);
+#endif
 
 	return ERR_OK;
 }

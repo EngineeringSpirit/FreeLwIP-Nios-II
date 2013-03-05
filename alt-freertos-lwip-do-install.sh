@@ -19,13 +19,13 @@
 #    by writing to Richard Barry, contact details for whom are available on the
 #    FreeRTOS WEB site.
 #
-# Created by Engineering Spirit (c) 2012 http://engineering-spirit.nl/
+# Created by Engineering Spirit (c) 2012-2013 http://engineering-spirit.nl/
 #
 
 # header
 cat << EOF
 /***************************************************************************\ 
-| Welcome to the FreeRTOS v7.2.0 with LwIP 1.4.0 installer!                 |
+| Welcome to the FreeRTOS v7.2.0 with LwIP 1.4.1 installer!                 |
 | This installer will will create an FreeRTOS BSP and LwIP software package |
 | into your Nios II IDE. We'll also create a Demo application which you can |
 | chose in your IDE to see how to work with this type of BSP / TCP/IP stack |
@@ -88,7 +88,7 @@ fi;
 # make directories just to be sure
 mkdir -p FreeRTOS_src 2> /dev/null;
 mkdir -p lwip 2> /dev/null;
-		
+
 # auto update for later
 which 2> /dev/null;
 if [ $? -eq 255 ]; then
@@ -113,42 +113,8 @@ if [ $? -eq 255 ]; then
 			echo -e "\nFreeRTOS up to date! Using: ${NEW_VERSION}\n";
 		fi;
 		
-		# check for LwIP update
-		NEW_VERSION=`curl "http://download.savannah.gnu.org/releases/lwip/" -s | grep -o lwip-[0-9].[0-9].[0-9].zip | uniq | tail -1`;
-		CUR_VERSION=`cat lwip/.cur_version 2>&1`;
-		
-		if [ "${NEW_VERSION}" != "${CUR_VERSION}" ]; then
-			echo -e "New LwIP version found: ${NEW_VERSION}\n Downloading please wait...";
-			echo -e "CAN'T AUTOMATE YET SINCE WE CAN'T ASSURE TO PATCH socket.h and socket.c!!";
-			
-			if false; then
-				wget "http://download.savannah.gnu.org/releases/lwip/${NEW_VERSION}" -O lwip/${NEW_VERSION};
-				cd lwip;
-				
-				unzip -d lwip -o -qq ${NEW_VERSION};
-				
-				mkdir -p FreeRTOS/inc;
-				mkdir -p FreeRTOS/src;
-				
-				# renew headers
-				rm -r FreeRTOS/inc/ipv4 FreeRTOS/inc/lwip FreeRTOS/inc/netif 2> /dev/null;
-				cp -r lwip/*/src/include/ipv4 lwip/*/src/include/lwip lwip/*/src/include/netif FreeRTOS/inc
-				
-				# renew sources
-				rm -r FreeRTOS/src/api FreeRTOS/src/core FreeRTOS/src/netif
-				cp -r lwip/*/src/api lwip/*/src/core lwip/*/src/netif FreeRTOS/src
-				
-				# move files from src/netif/ppp to inc/netif/ppp
-				mkdir -p FreeRTOS/inc/netif/ppp
-				mv FreeRTOS/src/netif/ppp/*.h FreeRTOS/inc/netif/ppp
-				
-				rm ${NEW_VERSION};
-				cd ..;
-				echo ${NEW_VERSION} > lwip/.cur_version;
-			fi;
-		else
-			echo -e "\nLwIP up to date! Using: ${NEW_VERSION}\n";
-		fi;
+		# can't auto update LwIP because of a lot of changes to the default LwIP
+		# source tree
 	fi;
 fi;
 
@@ -160,6 +126,15 @@ fi;
 # set some other path
 COMPONENTS="${ALT_PATH}/nios2eds/components";
 EXAMPLES="${ALT_PATH}/nios2eds/examples/software";
+
+# get the right file access rights for Windows 7 machines
+echo " - Silently setting rw POSIX access on the distribution files to avoid access troubles..";
+chmod -Rf u+rw FreeRTOS_src > /dev/null
+chmod -Rf u+rw freertos_demo > /dev/null
+chmod -Rf u+rw nios2_freertos_port > /dev/null
+chmod -Rf u+rw altera_nios2 > /dev/null
+chmod -Rf u+rw freertos > /dev/null
+chmod -Rf u+rw lwip > /dev/null
 
 echo -e "\n1. Preparing software Nios II Packages!";
 
@@ -214,28 +189,35 @@ echo -e "\n2. Copying packages to Nios II IDE"
 
 # now lets copy our stuff to the altera directory
 echo -n "    - FreeRTOS..: ";
-if cp -r "${INST_PATH}/freertos" "${COMPONENTS}"; then
+if cp -rf "${INST_PATH}/freertos" "${COMPONENTS}"; then
 	echo "Success";
 else
 	echo "Failed with error code: $?";
 fi;
 
 echo -n "    - LwIP......: ";
-if cp -r "${INST_PATH}/lwip" "${COMPONENTS}"; then
+if cp -rf "${INST_PATH}/lwip" "${COMPONENTS}"; then
 	echo "Success";
 else
 	echo "Failed with error code: $?";
 fi;
 
 echo -n "    - HAL.......: ";
-if cp -r "${INST_PATH}/altera_nios2" "${COMPONENTS}"; then
+if cp -rf "${INST_PATH}/altera_nios2" "${COMPONENTS}"; then
+	echo "Success";
+else
+	echo "Failed with error code: $?";
+fi;
+
+echo -n "    - Driver....: ";
+if cp -rf "${INST_PATH}/altera_triple_speed_ethernet" "${ALT_PATH}/ip/altera/triple_speed_ethernet/lib/sopc_builder"; then
 	echo "Success";
 else
 	echo "Failed with error code: $?";
 fi;
 
 echo -n "    - Demo......: ";
-if cp -r "${INST_PATH}/freertos_demo" "${EXAMPLES}"; then
+if cp -rf "${INST_PATH}/freertos_demo" "${EXAMPLES}"; then
 	echo "Success";
 else
 	echo "Failed with error code: $?";

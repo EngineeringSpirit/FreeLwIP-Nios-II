@@ -33,6 +33,7 @@
 # List all source files supplied by this component.
 
 C_LIB_SRCS   += alt_usleep.c
+C_LIB_SRCS	 += altera_avalon_tse.h
 
 ASM_LIB_SRCS += 
 

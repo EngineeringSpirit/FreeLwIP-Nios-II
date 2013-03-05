@@ -61,9 +61,9 @@ typedef xTaskHandle						sys_thread_t;
 
 #define archPOST_BLOCK_TIME_MS			10000
 
-#define SYS_ARCH_DECL_PROTECT(lev)
-#define SYS_ARCH_PROTECT(lev)			portDISABLE_INTERRUPTS()
-#define SYS_ARCH_UNPROTECT(lev)			portENABLE_INTERRUPTS()
+#define SYS_ARCH_DECL_PROTECT(lev)		u32_t lev
+#define SYS_ARCH_PROTECT(lev)			lev = alt_irq_disable_all()
+#define SYS_ARCH_UNPROTECT(lev)			alt_irq_enable_all(lev)
 
 #define sys_sem_valid(sem)          	(*sem != NULL)
 #define sys_mbox_valid(mbox)			(*mbox != NULL)

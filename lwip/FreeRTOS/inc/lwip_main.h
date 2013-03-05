@@ -136,7 +136,9 @@ extern const char* print_ipad(alt_u32 ip, char* buf);
  * Initialize function which should be called by the application. This function 
  * initializes the LwIP TCP/IP Stack and returns when done.
  */
-extern void lwip_initialize(void);
+extern void lwip_initialize(int waitForAll);
+
+extern void lwip_initialize_phys(void);
 
 #ifdef __cplusplus
 }
