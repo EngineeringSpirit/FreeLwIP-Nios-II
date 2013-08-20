@@ -209,12 +209,12 @@ else
 	echo "Failed with error code: $?";
 fi;
 
-echo -n "    - Driver....: ";
-if cp -rf "${INST_PATH}/altera_triple_speed_ethernet" "${ALT_PATH}/ip/altera/triple_speed_ethernet/lib/sopc_builder"; then
-	echo "Success";
-else
-	echo "Failed with error code: $?";
-fi;
+#echo -n "    - Driver....: ";
+#if cp -rf "${INST_PATH}/altera_triple_speed_ethernet" "${ALT_PATH}/ip/altera/triple_speed_ethernet/lib/sopc_builder"; then
+#	echo "Success";
+#else
+#	echo "Failed with error code: $?";
+#fi;
 
 echo -n "    - Demo......: ";
 if cp -rf "${INST_PATH}/freertos_demo" "${EXAMPLES}"; then
@@ -253,7 +253,7 @@ IFS=$IFS_B;
 # re-generate the components.ipx file for rockin and rollin
 echo -e "\n4. Re-Generating compontents.ipx to enable the packages in the Nios II IDE\n This could take a while, please stand by...";
 # All data belongs to us =)
-OUTPUT=`sb-make-ipx.exe --source-directory=. --output=components.ipx 2>&1`;
+OUTPUT=`ip-make-ipx.exe --source-directory=. --output=components.ipx 2>&1`;
 
 if [ $? -eq 0 ]; then
 	# Great succes!

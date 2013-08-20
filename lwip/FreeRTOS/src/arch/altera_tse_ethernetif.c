@@ -272,7 +272,7 @@ ethernetif_init(struct netif *netif)
 	 * You can instead declare your own function an call etharp_output()
 	 * from it if you have to do some checks before sending (e.g. if link
 	 * is available...) */
-	netif->output = etharp_output; // TODO tcpip_out?
+	netif->output = etharp_output;
 	netif->linkoutput = tse_mac_raw_send;
 
 	ethernetif->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);

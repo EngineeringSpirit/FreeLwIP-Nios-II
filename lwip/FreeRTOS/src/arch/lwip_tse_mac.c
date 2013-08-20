@@ -197,9 +197,9 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	IOWR_ALTERA_TSEMAC_RX_ALMOST_FULL(mi_base, 8);
 	IOWR_ALTERA_TSEMAC_TX_ALMOST_EMPTY(mi_base, 8);
 	IOWR_ALTERA_TSEMAC_TX_ALMOST_FULL(mi_base,  3);
-	IOWR_ALTERA_TSEMAC_TX_SECTION_EMPTY(mi_base, tse_hw->tse_tx_depth - 16); //1024/4;
-	IOWR_ALTERA_TSEMAC_TX_SECTION_FULL(mi_base,  0); //32/4; // start transmit when there are 48 bytes
-	IOWR_ALTERA_TSEMAC_RX_SECTION_EMPTY(mi_base, tse_hw->tse_rx_depth - 16); //4000/4);
+	IOWR_ALTERA_TSEMAC_TX_SECTION_EMPTY(mi_base, tse_hw->tse_tx_depth - 16);
+	IOWR_ALTERA_TSEMAC_TX_SECTION_FULL(mi_base,  0);
+	IOWR_ALTERA_TSEMAC_RX_SECTION_EMPTY(mi_base, tse_hw->tse_rx_depth - 16);
 	IOWR_ALTERA_TSEMAC_RX_SECTION_FULL(mi_base,  0);
 
 	/* Enable TX shift 16 for removing two bytes from the start of all transmitted frames */
