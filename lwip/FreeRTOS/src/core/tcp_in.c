@@ -366,16 +366,16 @@ tcp_input(struct pbuf *p, struct netif *inp)
             /* Delay this if we have refused data. */
             pcb->refused_data->flags |= PBUF_FLAG_TCP_FIN;
           } else {
-          /* correct rcv_wnd as the application won't call tcp_recved()
-             for the FIN's seqno */
-          if (pcb->rcv_wnd != TCP_WND) {
-            pcb->rcv_wnd++;
+            /* correct rcv_wnd as the application won't call tcp_recved()
+               for the FIN's seqno */
+            if (pcb->rcv_wnd != TCP_WND) {
+              pcb->rcv_wnd++;
+            }
+            TCP_EVENT_CLOSED(pcb, err);
+            if (err == ERR_ABRT) {
+              goto aborted;
+            }
           }
-          TCP_EVENT_CLOSED(pcb, err);
-          if (err == ERR_ABRT) {
-            goto aborted;
-          }
-        }
         }
 
         tcp_input_pcb = NULL;

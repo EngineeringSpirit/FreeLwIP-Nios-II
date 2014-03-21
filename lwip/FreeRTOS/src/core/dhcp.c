@@ -121,7 +121,7 @@
 #define DHCP_OPTION_IDX_T2          5
 #define DHCP_OPTION_IDX_SUBNET_MASK 6
 #define DHCP_OPTION_IDX_ROUTER      7
-#define DHCP_OPTION_IDX_DNS_SERVER	8
+#define DHCP_OPTION_IDX_DNS_SERVER  8
 #define DHCP_OPTION_IDX_MAX         (DHCP_OPTION_IDX_DNS_SERVER + DNS_MAX_SERVERS)
 
 /** Holds the decoded option values, only valid while in dhcp_recv.
@@ -182,6 +182,21 @@ static void dhcp_option_hostname(struct dhcp *dhcp, struct netif *netif);
 static void dhcp_option_trailer(struct dhcp *dhcp);
 
 /**
+ * Clear the IP assignment of the interface.
+ *
+ * @param netif the netif under DHCP control
+ */
+static void
+dhcp_clear_assignment(struct netif *netif)
+{
+  netif_set_down(netif);
+  /* remove IP address from interface */
+  netif_set_ipaddr(netif, IP_ADDR_ANY);
+  netif_set_gw(netif, IP_ADDR_ANY);
+  netif_set_netmask(netif, IP_ADDR_ANY); 
+}
+
+/**
  * Back-off the DHCP client (because of a received NAK response).
  *
  * Back-off the DHCP client because of a received NAK. Receiving a
@@ -200,11 +215,7 @@ dhcp_handle_nak(struct netif *netif)
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_handle_nak(netif=%p) %c%c%"U16_F"\n", 
     (void*)netif, netif->name[0], netif->name[1], (u16_t)netif->num));
   /* Set the interface down since the address must no longer be used, as per RFC2131 */
-  netif_set_down(netif);
-  /* remove IP address from interface */
-  netif_set_ipaddr(netif, IP_ADDR_ANY);
-  netif_set_gw(netif, IP_ADDR_ANY);
-  netif_set_netmask(netif, IP_ADDR_ANY); 
+  dhcp_clear_assignment(netif);
   /* Change to a defined state */
   dhcp_set_state(dhcp, DHCP_BACKING_OFF);
   /* We can immediately restart discovery */
@@ -671,6 +682,8 @@ dhcp_start(struct netif *netif)
     LWIP_ASSERT("reply wasn't freed", dhcp->msg_in == NULL );
   }
     
+  /* clear the previous IP assignment */
+  dhcp_clear_assignment(netif);
   /* clear data structure */
   memset(dhcp, 0, sizeof(struct dhcp));
   /* dhcp_set_state(&dhcp, DHCP_OFF); */
@@ -1452,34 +1465,34 @@ again:
 decode_next:
       LWIP_ASSERT("check decode_idx", decode_idx >= 0 && decode_idx < DHCP_OPTION_IDX_MAX);
       if (!dhcp_option_given(dhcp, decode_idx)) {
-      copy_len = LWIP_MIN(decode_len, 4);
-      pbuf_copy_partial(q, &value, copy_len, val_offset);
-      if (decode_len > 4) {
-        /* decode more than one u32_t */
+        copy_len = LWIP_MIN(decode_len, 4);
+        pbuf_copy_partial(q, &value, copy_len, val_offset);
+        if (decode_len > 4) {
+          /* decode more than one u32_t */
           LWIP_ERROR("decode_len % 4 == 0", decode_len % 4 == 0, return ERR_VAL;);
-        dhcp_got_option(dhcp, decode_idx);
-        dhcp_set_option_value(dhcp, decode_idx, htonl(value));
-        decode_len -= 4;
-        val_offset += 4;
-        decode_idx++;
-        goto decode_next;
-      } else if (decode_len == 4) {
-        value = ntohl(value);
-      } else {
+          dhcp_got_option(dhcp, decode_idx);
+          dhcp_set_option_value(dhcp, decode_idx, htonl(value));
+          decode_len -= 4;
+          val_offset += 4;
+          decode_idx++;
+          goto decode_next;
+        } else if (decode_len == 4) {
+          value = ntohl(value);
+        } else {
           LWIP_ERROR("invalid decode_len", decode_len == 1, return ERR_VAL;);
-        value = ((u8_t*)&value)[0];
+          value = ((u8_t*)&value)[0];
+        }
+        dhcp_got_option(dhcp, decode_idx);
+        dhcp_set_option_value(dhcp, decode_idx, value);
       }
-      dhcp_got_option(dhcp, decode_idx);
-      dhcp_set_option_value(dhcp, decode_idx, value);
-    }
     }
     if (offset >= q->len) {
       offset -= q->len;
       offset_max -= q->len;
       if ((offset < offset_max) && offset_max) {
-      q = q->next;
+        q = q->next;
         LWIP_ASSERT("next pbuf was null", q);
-      options = (u8_t*)q->payload;
+        options = (u8_t*)q->payload;
       } else {
         // We've run out of bytes, probably no end marker. Don't proceed.
         break;
@@ -1675,7 +1688,7 @@ dhcp_create_msg(struct netif *netif, struct dhcp *dhcp, u8_t message_type)
 #if DHCP_CREATE_RAND_XID && defined(LWIP_RAND)
     xid = LWIP_RAND();
 #else /* DHCP_CREATE_RAND_XID && defined(LWIP_RAND) */
-      xid++;
+    xid++;
 #endif /* DHCP_CREATE_RAND_XID && defined(LWIP_RAND) */
   }
   dhcp->xid = xid;

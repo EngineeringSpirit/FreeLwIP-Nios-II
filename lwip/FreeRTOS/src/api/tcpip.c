@@ -180,19 +180,19 @@ tcpip_input(struct pbuf *p, struct netif *inp)
   if (!sys_mbox_valid(&mbox)) {
     return ERR_VAL;
   }
-    msg = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG_INPKT);
-    if (msg == NULL) {
-      return ERR_MEM;
-    }
+  msg = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG_INPKT);
+  if (msg == NULL) {
+    return ERR_MEM;
+  }
 
-    msg->type = TCPIP_MSG_INPKT;
-    msg->msg.inp.p = p;
-    msg->msg.inp.netif = inp;
-    if (sys_mbox_trypost(&mbox, msg) != ERR_OK) {
-      memp_free(MEMP_TCPIP_MSG_INPKT, msg);
-      return ERR_MEM;
-    }
-    return ERR_OK;
+  msg->type = TCPIP_MSG_INPKT;
+  msg->msg.inp.p = p;
+  msg->msg.inp.netif = inp;
+  if (sys_mbox_trypost(&mbox, msg) != ERR_OK) {
+    memp_free(MEMP_TCPIP_MSG_INPKT, msg);
+    return ERR_MEM;
+  }
+  return ERR_OK;
 #endif /* LWIP_TCPIP_CORE_LOCKING_INPUT */
 }
 

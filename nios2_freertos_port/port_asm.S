@@ -51,6 +51,8 @@
     licensing and training services.
 */
 
+#include <system.h>
+
 .extern		vTaskSwitchContext
 	
 .set noat
@@ -183,7 +185,12 @@ soft_exceptions:
 	ori		at, at, %lo(0x003B683A)
    	cmpne	et, et, at				# Compare the trap instruction code to the last excuted instruction
   	beq		et, r0, call_scheduler	# its a trap so switchcontext
+#ifdef ALT_INCLUDE_INSTRUCTION_RELATED_EXCEPTION_API
+  	mov		r4, ea									# load the PC of the exception into r4
+  	call	alt_instruction_exception_entry			# call the invalid instruction parser and bring up the instruction in the callback
+#else
   	break							# This is an un-implemented instruction or muldiv problem.
+#endif
   	br		restore_context			# its something else
 
 call_scheduler:

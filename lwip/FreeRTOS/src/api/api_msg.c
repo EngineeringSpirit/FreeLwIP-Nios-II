@@ -320,11 +320,11 @@ sent_tcp(void *arg, struct tcp_pcb *pcb, u16_t len)
   LWIP_ASSERT("conn != NULL", (conn != NULL));
 
   if (conn) {
-	if (conn->state == NETCONN_WRITE) {
-	  do_writemore(conn);
-	} else if (conn->state == NETCONN_CLOSE) {
-	  do_close_internal(conn);
-	}
+  if (conn->state == NETCONN_WRITE) {
+    do_writemore(conn);
+  } else if (conn->state == NETCONN_CLOSE) {
+    do_close_internal(conn);
+  }
 
     /* If the queued byte- or pbuf-count drops below the configured low-water limit,
        let select mark this pcb as writable again. */
@@ -795,9 +795,9 @@ do_close_internal(struct netconn *conn)
     conn->current_msg = NULL;
     conn->state = NETCONN_NONE;
     if (close) {
-    /* Set back some callback pointers as conn is going away */
-    conn->pcb.tcp = NULL;
-    /* Trigger select() in socket layer. Make sure everybody notices activity
+      /* Set back some callback pointers as conn is going away */
+      conn->pcb.tcp = NULL;
+      /* Trigger select() in socket layer. Make sure everybody notices activity
        on the connection, error first! */
       API_EVENT(conn, NETCONN_EVT_ERROR, 0);
     }
@@ -1241,21 +1241,21 @@ do_writemore(struct netconn *conn)
   } else
 #endif /* LWIP_SO_SNDTIMEO */
   {
-  dataptr = (u8_t*)conn->current_msg->msg.w.dataptr + conn->write_offset;
-  diff = conn->current_msg->msg.w.len - conn->write_offset;
-  if (diff > 0xffffUL) { /* max_u16_t */
-    len = 0xffff;
+    dataptr = (u8_t*)conn->current_msg->msg.w.dataptr + conn->write_offset;
+    diff = conn->current_msg->msg.w.len - conn->write_offset;
+    if (diff > 0xffffUL) { /* max_u16_t */
+      len = 0xffff;
 #if LWIP_TCPIP_CORE_LOCKING
-    conn->flags |= NETCONN_FLAG_WRITE_DELAYED;
+      conn->flags |= NETCONN_FLAG_WRITE_DELAYED;
 #endif
-    apiflags |= TCP_WRITE_FLAG_MORE;
-  } else {
-    len = (u16_t)diff;
-  }
-  available = tcp_sndbuf(conn->pcb.tcp);
-  if (available < len) {
-    /* don't try to write more than sendbuf */
-    len = available;
+      apiflags |= TCP_WRITE_FLAG_MORE;
+    } else {
+      len = (u16_t)diff;
+    }
+    available = tcp_sndbuf(conn->pcb.tcp);
+    if (available < len) {
+      /* don't try to write more than sendbuf */
+      len = available;
       if (dontblock){ 
         if (!len) {
           err = ERR_WOULDBLOCK;
@@ -1263,11 +1263,11 @@ do_writemore(struct netconn *conn)
         }
       } else {
 #if LWIP_TCPIP_CORE_LOCKING
-    conn->flags |= NETCONN_FLAG_WRITE_DELAYED;
+        conn->flags |= NETCONN_FLAG_WRITE_DELAYED;
 #endif
-    apiflags |= TCP_WRITE_FLAG_MORE;
-  }
-  }
+        apiflags |= TCP_WRITE_FLAG_MORE;
+      }
+    }
     LWIP_ASSERT("do_writemore: invalid length!", ((conn->write_offset + len) <= conn->current_msg->msg.w.len));
     err = tcp_write(conn->pcb.tcp, dataptr, len, apiflags);
     /* if OK or memory error, check available space */
@@ -1277,13 +1277,13 @@ err_mem:
         /* non-blocking write did not write everything: mark the pcb non-writable
            and let poll_tcp check writable space to mark the pcb writable again */
         API_EVENT(conn, NETCONN_EVT_SENDMINUS, len);
-    conn->flags |= NETCONN_FLAG_CHECK_WRITESPACE;
+        conn->flags |= NETCONN_FLAG_CHECK_WRITESPACE;
       } else if ((tcp_sndbuf(conn->pcb.tcp) <= TCP_SNDLOWAT) ||
                  (tcp_sndqueuelen(conn->pcb.tcp) >= TCP_SNDQUEUELOWAT)) {
-      /* The queued byte- or pbuf-count exceeds the configured low-water limit,
-         let select mark this pcb as non-writable. */
-      API_EVENT(conn, NETCONN_EVT_SENDMINUS, len);
-    }
+        /* The queued byte- or pbuf-count exceeds the configured low-water limit,
+           let select mark this pcb as non-writable. */
+        API_EVENT(conn, NETCONN_EVT_SENDMINUS, len);
+      }
     }
 
     if (err == ERR_OK) {

@@ -81,6 +81,21 @@ static inline void prvReadGp( unsigned long *ulValue )
 }
 /*-----------------------------------------------------------*/
 
+static volatile alt_irq_context lastContext;
+
+void enh_alt_irq_disable_all()
+{
+	alt_irq_context ctxt = alt_irq_disable_all();
+	lastContext |= ctxt;
+}
+
+void enh_alt_irq_enable_all()
+{
+	alt_irq_context restore = lastContext;
+	lastContext = 0;
+	alt_irq_enable_all(restore);
+}
+
 /* 
  * See header file for description. 
  */

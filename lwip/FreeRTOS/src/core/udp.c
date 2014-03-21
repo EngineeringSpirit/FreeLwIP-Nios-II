@@ -246,16 +246,16 @@ udp_input(struct pbuf *p, struct netif *inp)
 #endif /* LWIP_IGMP */
 #if IP_SOF_BROADCAST_RECV
             (broadcast && ip_get_option(pcb, SOF_BROADCAST) &&
-#else  /* IP_SOF_BROADCAST_RECV */
+#else /* IP_SOF_BROADCAST_RECV */
             (broadcast &&
 			(ip_addr_cmp(&(pcb->local_ip), &(inp->ip_addr)) || 
 			 ip_addr_isany(&pcb->local_ip))))) {
-#endif /* IP_SOF_BROADCAST_RECV */
-        local_match = 1;
-        if ((uncon_pcb == NULL) && 
-            ((pcb->flags & UDP_FLAGS_CONNECTED) == 0)) {
-          /* the first unconnected matching PCB */
-          uncon_pcb = pcb;
+#endif /* IP_SOF_BROADCAST_RECV */ 
+          local_match = 1;
+          if ((uncon_pcb == NULL) && 
+              ((pcb->flags & UDP_FLAGS_CONNECTED) == 0)) {
+            /* the first unconnected matching PCB */
+            uncon_pcb = pcb;
         }
       }
       /* compare PCB remote addr+port to UDP source addr+port */

@@ -78,7 +78,7 @@ static netif_status_callback_fn status_callback = NULL;
 static netif_status_callback_fn link_callback = NULL;
 
 // our interface array, in case we want to support more then one PHY
-static struct netif eth_tse[PHY_COUNT];
+struct netif eth_tse[PHY_COUNT];
 
 // some private functions
 #if MY_TIMER
@@ -334,6 +334,19 @@ volatile np_tse_mac* get_mac_base(int idx)
 	return (volatile np_tse_mac*)tse_mac_device[idx].tse_mac_base;
 }
 
+/**
+ * \brief Get the netif struct used by LwIP
+ *
+ * \return the reference to the netif used by LwIP
+ */
+struct netif* get_netif(int idx)
+{
+	if (idx > PHY_COUNT)
+		return NULL;
+
+	return eth_tse + idx;
+}
+
 netif_status_callback_fn lwip_set_status_callback(netif_status_callback_fn callback)
 {
 	netif_status_callback_fn old = status_callback;
@@ -352,9 +365,13 @@ netif_status_callback_fn lwip_set_link_callback(netif_status_callback_fn callbac
 	return old;
 }
 
+#define REG_STATS_LS					(1 << 2)	// Link Status
+
 int __attribute__((weak)) lwip_is_interface_up(__unused np_tse_mac* pmac)
 {
-	return ETH_INTERFACE_UP;
+	alt_u16 reg = IORD(&pmac->mdio1.STATUS, 0);
+
+	return ((reg & (REG_STATS_LS)) == REG_STATS_LS) ? ETH_INTERFACE_UP : ETH_INTERFACE_DOWN;
 }
 
 static void lwip_check_link_status(struct netif *netif, np_tse_mac* base)

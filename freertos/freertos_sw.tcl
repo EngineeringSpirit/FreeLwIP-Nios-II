@@ -133,7 +133,7 @@ Setting configIDLE_SHOULD_YIELD prevents the idle task from yielding processing 
 add_sw_setting decimal_number system_h_define task.max_priorities OS_MAX_PRIORITIES 5 "The number of priorities available to the application tasks. Any number of tasks can share the same priority. Co-routines are prioritised separately - see configMAX_CO_ROUTINE_PRIORITIES.
 Each available priority consumes RAM within the kernel so this value should not be set any higher than actually required by your application."
 
-add_sw_setting decimal_number system_h_define task.minimal_stack_size OS_MINIMAL_STACK_SIZE 1024 "The size of the stack used by the idle task. Generally this should not be reduced from the value set in the FreeRTOSConfig.h file provided with the demo application for the port you are using."
+add_sw_setting decimal_number system_h_define task.minimal_stack_size OS_MINIMAL_STACK_SIZE 4096 "The size of the stack used by the idle task. Generally this should not be reduced from the value set in the FreeRTOSConfig.h file provided with the demo application for the port you are using."
 
 add_sw_setting decimal_number system_h_define task.max_task_name_len OS_MAX_TASK_NAME_LEN 40 "The maximum permissible length of the descriptive name given to a task when the task is created. The length is specified in the number of characters including the NULL termination byte."
 

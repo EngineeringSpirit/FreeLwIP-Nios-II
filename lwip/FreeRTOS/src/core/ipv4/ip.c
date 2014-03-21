@@ -138,11 +138,11 @@ ip_route(ip_addr_t *src, ip_addr_t *dest)
     if (netif_is_up(netif)) {
       if (ip_addr_netcmp(dest, &(netif->ip_addr), &(netif->netmask))) {
         if (!src || !src->addr || ip_addr_cmp(src, &(netif->ip_addr))) {
-    	  /* return netif on which to forward IP packet */
-          return netif;
-        }
+        /* return netif on which to forward IP packet */
+        return netif;
       }
     }
+  }
   }
   if ((netif_default == NULL) || (!netif_is_up(netif_default))) {
     LWIP_DEBUGF(IP_DEBUG | LWIP_DBG_LEVEL_SERIOUS, ("ip_route: No route to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",

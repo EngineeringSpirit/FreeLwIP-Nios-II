@@ -98,7 +98,6 @@ low_level_input(struct netif *netif)
 {
 	struct ethernetif *ethernetif = netif->state;
 	struct pbuf *p, *nextPkt;
-	u32_t cpu_sr;
 
 	if(ethernetif->lwipRxCount <= 0)
 		return NULL;
@@ -118,7 +117,7 @@ low_level_input(struct netif *netif)
 	nextPkt = (void *) alt_remap_uncached(nextPkt,sizeof *nextPkt);
 	nextPkt->payload = (void *) alt_remap_uncached(nextPkt->payload, PBUF_POOL_BUFSIZE);
 
-	cpu_sr = alt_irq_disable_all();
+	enh_alt_irq_disable_all();
 
 	p = ethernetif->lwipRxPbuf[ethernetif->lwipRxIndex];
 	ethernetif->lwipRxPbuf[ethernetif->lwipRxIndex] = nextPkt;
@@ -127,7 +126,7 @@ low_level_input(struct netif *netif)
 
 	--ethernetif->lwipRxCount;
 
-	alt_irq_enable_all(cpu_sr);
+	enh_alt_irq_enable_all();
 
 	LWIP_ASSERT("low_level_input: pbuf in rx buffer is NULL", p != NULL );
 	LWIP_ASSERT("low_level_input: pbuf->len in rx buffer is 0", p->len != 0 );

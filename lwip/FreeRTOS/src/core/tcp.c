@@ -185,9 +185,9 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
       tcp_pcb_purge(pcb);
       TCP_RMV_ACTIVE(pcb);
       if (pcb->state == ESTABLISHED) {
-      /* move to TIME_WAIT since we close actively */
-      pcb->state = TIME_WAIT;
-      TCP_REG(&tcp_tw_pcbs, pcb);
+        /* move to TIME_WAIT since we close actively */
+        pcb->state = TIME_WAIT;
+        TCP_REG(&tcp_tw_pcbs, pcb);
       } else {
         /* CLOSE_WAIT: deallocate the pcb since we already sent a RST for it */
         memp_free(MEMP_TCP_PCB, pcb);
@@ -332,11 +332,11 @@ tcp_shutdown(struct tcp_pcb *pcb, int shut_rx, int shut_tx)
     /* This can't happen twice since if it succeeds, the pcb's state is changed.
        Only close in these states as the others directly deallocate the PCB */
     switch (pcb->state) {
-  case SYN_RCVD:
-  case ESTABLISHED:
-  case CLOSE_WAIT:
+    case SYN_RCVD:
+    case ESTABLISHED:
+    case CLOSE_WAIT:
       return tcp_close_shutdown(pcb, shut_rx);
-  default:
+    default:
       /* Not (yet?) connected, cannot shutdown the TX side as that would bring us
         into CLOSED state, where the PCB is deallocated. */
       return ERR_CONN;
@@ -883,12 +883,12 @@ tcp_slowtmr_start:
       if (pcb->flags & TF_RXCLOSED) {
         /* PCB was fully closed (either through close() or SHUT_RDWR):
            normal FIN-WAIT timeout handling. */
-      if ((u32_t)(tcp_ticks - pcb->tmr) >
-          TCP_FIN_WAIT_TIMEOUT / TCP_SLOW_INTERVAL) {
-        ++pcb_remove;
-        LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN-WAIT-2\n"));
+        if ((u32_t)(tcp_ticks - pcb->tmr) >
+            TCP_FIN_WAIT_TIMEOUT / TCP_SLOW_INTERVAL) {
+          ++pcb_remove;
+          LWIP_DEBUGF(TCP_DEBUG, ("tcp_slowtmr: removing pcb stuck in FIN-WAIT-2\n"));
+        }
       }
-    }
     }
 
     /* Check if KEEPALIVE should be sent */
@@ -1056,13 +1056,13 @@ tcp_fasttmr_start:
     if (pcb->last_timer != tcp_timer_ctr) {
       struct tcp_pcb *next;
       pcb->last_timer = tcp_timer_ctr;
-    /* send delayed ACKs */
+      /* send delayed ACKs */
       if (pcb->flags & TF_ACK_DELAY) {
-      LWIP_DEBUGF(TCP_DEBUG, ("tcp_fasttmr: delayed ACK\n"));
-      tcp_ack_now(pcb);
-      tcp_output(pcb);
-      pcb->flags &= ~(TF_ACK_DELAY | TF_ACK_NOW);
-    }
+        LWIP_DEBUGF(TCP_DEBUG, ("tcp_fasttmr: delayed ACK\n"));
+        tcp_ack_now(pcb);
+        tcp_output(pcb);
+        pcb->flags &= ~(TF_ACK_DELAY | TF_ACK_NOW);
+      }
 
       next = pcb->next;
 
@@ -1075,8 +1075,8 @@ tcp_fasttmr_start:
           goto tcp_fasttmr_start;
         }
       }
-    pcb = next;
-  }
+      pcb = next;
+    }
   }
 }
 
@@ -1374,7 +1374,7 @@ tcp_new(void)
  */ 
 void
 tcp_arg(struct tcp_pcb *pcb, void *arg)
-{  
+{
   /* This function is allowed to be called for both listen pcbs and
      connection pcbs. */
   pcb->callback_arg = arg;

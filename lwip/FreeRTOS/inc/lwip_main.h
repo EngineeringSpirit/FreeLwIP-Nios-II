@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 #include <arch/cc.h>
+#include <lwip/netif.h>
 #include <altera_tse_ethernetif.h>
 
 #define ETH_IFACE_NAME_LENGTH		2
@@ -116,6 +117,13 @@ extern int get_mac_count(void);
 extern volatile np_tse_mac* get_mac_base(int idx);
 
 /**
+ * \brief Get the netif struct used by LwIP
+ *
+ * \return the reference to the netif used by LwIP
+ */
+extern struct netif* get_netif(int idx);
+
+/**
  * \brief set status callback functions when network stats change.
  *
  * \return a pointer to the previous callback function
@@ -138,6 +146,9 @@ extern const char* print_ipad(alt_u32 ip, char* buf);
  */
 extern void lwip_initialize(int waitForAll);
 
+/**
+ * \brief Initialize the PHY's to there default state
+ */
 extern void lwip_initialize_phys(void);
 
 #ifdef __cplusplus

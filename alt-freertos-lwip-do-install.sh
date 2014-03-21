@@ -91,7 +91,7 @@ mkdir -p lwip 2> /dev/null;
 
 # auto update for later
 which 2> /dev/null;
-if [ $? -eq 255 ]; then
+if [ $? -eq 255 ] && false; then
 	if which wget &> /dev/null && which curl &> /dev/null && which unzip &> /dev/null; then
 		# check for FreeRTOS update
 		NEW_VERSION=`curl "http://sourceforge.net/projects/freertos/files/FreeRTOS/" -s | grep -o "V[0-9].[0-9].[0-9]" | head -1`;

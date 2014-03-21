@@ -602,7 +602,7 @@ mem_malloc_adjust_lfree:
               /* If mem_free or mem_trim have run, we have to restart since they
                  could have altered our current struct mem or lfree. */
               goto mem_malloc_adjust_lfree;
-          }
+            }
 #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
             cur = (struct mem *)(void *)&ram[cur->next];
           }

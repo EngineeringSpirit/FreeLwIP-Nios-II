@@ -200,9 +200,9 @@ struct tcp_pcb {
 
   /* Retransmission timer. */
   s16_t rtime;
-  
+
   u16_t mss;   /* maximum segment size */
-  
+
   /* RTT (round trip time) estimation variables */
   u32_t rttest; /* RTT estimate in 500ms ticks */
   u32_t rtseq;  /* sequence number being timed */
@@ -214,9 +214,9 @@ struct tcp_pcb {
   /* fast retransmit/recovery */
   u8_t dupacks;
   u32_t lastack; /* Highest acknowledged seqno. */
-  
+
   /* congestion avoidance/control variables */
-  u16_t cwnd;  
+  u16_t cwnd;
   u16_t ssthresh;
 
   /* sender variables */
@@ -228,7 +228,7 @@ struct tcp_pcb {
   u16_t snd_wnd_max; /* the maximum sender window announced by the remote host */
 
   u16_t acked;
-  
+
   u16_t snd_buf;   /* Available buffer space for sending (in bytes). */
 #define TCP_SNDQUEUELEN_OVERFLOW (0xffffU-3)
   u16_t snd_queuelen; /* Available buffer space for sending (in tcp_segs). */

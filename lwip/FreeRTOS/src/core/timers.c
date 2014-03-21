@@ -358,14 +358,14 @@ void
 sys_check_timeouts(void)
 {
   if (next_timeout) {
-  struct sys_timeo *tmptimeout;
-  u32_t diff;
-  sys_timeout_handler handler;
-  void *arg;
+    struct sys_timeo *tmptimeout;
+    u32_t diff;
+    sys_timeout_handler handler;
+    void *arg;
     u8_t had_one;
-  u32_t now;
+    u32_t now;
 
-  now = sys_now();
+    now = sys_now();
     /* this cares for wraparounds */
     diff = now - timeouts_last_time;
     do

@@ -110,8 +110,11 @@ __asm__( "\n\t.globl	save_context" );
 extern void vTaskEnterCritical( void );
 extern void vTaskExitCritical( void );
 
-#define portDISABLE_INTERRUPTS()	alt_irq_disable_all()
-#define portENABLE_INTERRUPTS()		alt_irq_enable_all( 0x01 );
+extern void enh_alt_irq_disable_all( void );
+extern void enh_alt_irq_enable_all( void );
+
+#define portDISABLE_INTERRUPTS()	enh_alt_irq_disable_all()
+#define portENABLE_INTERRUPTS()		enh_alt_irq_enable_all()
 #define portENTER_CRITICAL()        if (xTaskGetSchedulerState()) vTaskEnterCritical()
 #define portEXIT_CRITICAL()         if (xTaskGetSchedulerState()) vTaskExitCritical()
 /*-----------------------------------------------------------*/

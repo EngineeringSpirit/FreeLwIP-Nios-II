@@ -32,9 +32,8 @@ proc resolve_ethernet_macs {} {
 	foreach slave [get_slave_descs] {
 		set module [get_module_name $slave]
 		
-		if [is_ethernet_mac_device $slave] {
+		#if [is_ethernet_mac_device $slave] {
 			if {[scan $slave "tse_mac_%d" nr] != 1} {
-				puts "ERROR: Invalid ethernet MAC: $slave"
 				continue
 			}
 
@@ -78,7 +77,10 @@ proc resolve_ethernet_macs {} {
 			add_systemh_line FreeRTOS [format "GOT_TSE_MAC_%d" $nr] 1
 
 			set phy_count [expr $phy_count + 1]
-		}
+		#} else {
+		#	set bla [is_ethernet_mac_device $slave]
+		#	puts "ERROR: Not an TSE MAC: $slave - $bla"
+		#}
 	}
 	
     # we have tell the system
