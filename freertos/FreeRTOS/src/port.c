@@ -58,6 +58,7 @@
 /* Standard Includes. */
 #include <string.h>
 #include <errno.h>
+#include <reent.h>
 
 /* Altera includes. */
 #include "sys/alt_irq.h"
@@ -73,6 +74,10 @@
 /* Interrupts are enabled. */
 #define portINITIAL_ESTATUS     ( portSTACK_TYPE ) 0x01 
 
+extern void (*taskStart)(void);                 /* The entry point for all tasks. */
+
+extern void *pxCurrentTCB;
+
 /*-----------------------------------------------------------*/
 
 static inline void prvReadGp( unsigned long *ulValue )
@@ -81,6 +86,45 @@ static inline void prvReadGp( unsigned long *ulValue )
 }
 /*-----------------------------------------------------------*/
 
+static volatile int interruptNesting = 0;
+
+int getInterruptNesting(void)
+{
+	return interruptNesting;
+}
+
+void freertosIntEnter(void)
+{
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		alt_irq_context context = alt_irq_disable_all();
+
+		if (interruptNesting < 255)
+			++interruptNesting;
+		else
+			NIOS2_BREAK();
+
+		alt_irq_enable_all(context);
+	}
+}
+
+void freertosIntExit(void)
+{
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+	{
+		alt_irq_context context = alt_irq_disable_all();
+
+		if (interruptNesting > 0)
+			--interruptNesting;
+
+		if (interruptNesting == 0)
+			freertosIntContextSwitch();
+
+		alt_irq_enable_all(context);
+	}
+}
+
+#if 0
 static volatile alt_irq_context lastContext;
 
 void enh_alt_irq_disable_all()
@@ -95,12 +139,32 @@ void enh_alt_irq_enable_all()
 	lastContext = 0;
 	alt_irq_enable_all(restore);
 }
+#endif
 
 /* 
  * See header file for description. 
  */
-portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {    
+#if 1 // new port
+	StackType_t *pxFramePointer = pxTopOfStack - 1;
+	StackType_t *pxStackPointer;
+	StackType_t xGlobalPointer;
+
+    prvReadGp( &xGlobalPointer );
+
+	pxStackPointer = pxFramePointer - 13;
+
+	/* fill the stack frame. */
+
+	pxStackPointer[12] = (StackType_t)pxCode;
+	pxStackPointer[11] = (StackType_t)pvParameters;
+
+	pxStackPointer[0] = ((StackType_t)&taskStart) + sizeof(StackType_t); /* exception return address (ea) */
+
+	return pxStackPointer;
+
+#else
 portSTACK_TYPE *pxFramePointer = pxTopOfStack - 1;
 portSTACK_TYPE xGlobalPointer;
 
@@ -132,41 +196,72 @@ portSTACK_TYPE xGlobalPointer;
     pxTopOfStack -= 5;
 
     return pxTopOfStack;
+#endif
 }
 /*-----------------------------------------------------------*/
 
 /* 
  * See header file for description. 
  */
-portBASE_TYPE xPortStartScheduler( void )
+BaseType_t xPortStartScheduler( void )
 {
 	// Just load the task which is currently revered to by TCB
-    asm volatile (  " movia r2, restore_sp_from_pxCurrentTCB        \n"
+    asm volatile (  " movia r2, freertosStartHighestPrioTask		\n"
                     " jmp r2                                          " );
 
     // This should never be reached
-    return 0;
+    return pdTRUE;
 }
 /*-----------------------------------------------------------*/
 
 void vPortEndScheduler( void )
 {
+	// TODO reset the device?
+
 	// It is unlikely that the NIOS2 port will require this function as there is nothing to return to.
 }
 /*-----------------------------------------------------------*/
 
-void vPortSysTickHandler( void )
+void vPortYieldTask(void)
 {
-	// only make ticks if the scheduler has been started.
-	if ( xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED )
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		// Increment the Kernel Tick.
-		vTaskIncrementTick();
+		alt_irq_context ctxt = alt_irq_disable_all();
 
-		// If using preemption, also force a context switch.
-#if configUSE_PREEMPTION == 1
-		vTaskSwitchContext();
+		freertosContextSwitch();
+
+		alt_irq_enable_all(ctxt);
+
+#if 0
+		printf("t: %p, sp: %p, fp: %p\n", pxCurrentTCB, GetStackPointer(), GetFramePointer());
 #endif
 	}
 }
-/*-----------------------------------------------------------*/
+
+void* GetStackPointer()
+{
+	void *sp;
+	asm volatile ("mov %0, sp" : "=r" (sp) );
+	return sp;
+}
+
+void* GetFramePointer()
+{
+	void *fp;
+	asm volatile ( "mov %0, fp" : "=r"(fp) );
+	return fp;
+}
+
+void freertosTaskSwitchHook(void)
+{
+#if 0
+	if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+		printf("t: %p, sp: %p, fp: %p\n", pxCurrentTCB, GetStackPointer(), GetFramePointer());
+#endif
+}
+
+void vPortSysTickHandler()
+{
+	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+		xTaskIncrementTick();
+}

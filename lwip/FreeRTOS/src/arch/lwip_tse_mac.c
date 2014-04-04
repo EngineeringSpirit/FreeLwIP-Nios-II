@@ -534,13 +534,14 @@ err_t tse_mac_raw_send(struct netif *netif, struct pbuf *pkt)
 int tse_mac_rcv(struct ethernetif *ethernetif)
 {
 #if LWIP_RECEIVE_SEMAPHORE
-	signed portBASE_TYPE switch_context = 0;
+	BaseType_t switch_context = 0;
 #endif
 
 	int pklen;
 	lwip_tse_info* tse_ptr;
 	alt_u32 *uncached_packet_payload;
 	struct pbuf *p;
+	alt_irq_context context;
 
 	tse_ptr = ethernetif->tse_info;
 	pklen = IORD_16DIRECT(&(tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST].actual_bytes_transferred),0);
@@ -549,14 +550,14 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 	p->len = pklen;
 	if ((IORD_ALTERA_TSE_SGDMA_DESC_STATUS(&tse_ptr->desc[ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST]) & ( ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_CRC_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_PARITY_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_OVERFLOW_MSK |ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_SYNC_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_UEOP_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_MEOP_MSK | ALTERA_AVALON_SGDMA_DESCRIPTOR_STATUS_E_MSOP_MSK )) == 0)
 	{
-		enh_alt_irq_disable_all();
+		context = alt_irq_disable_all();
 
 		if (++ethernetif->lwipRxCount >= LWIP_RX_ETH_BUFFER)
 		{
 			LINK_STATS_INC(link.drop);
 			--ethernetif->lwipRxCount;
 
-			enh_alt_irq_enable_all();
+			alt_irq_enable_all(context);
 
 			dprintf(("No free buffers for RX on iface: %hhd\n", ethernetif->iface));
 		}
@@ -568,7 +569,7 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 			if (++ethernetif->lwipRxIndexIsr >= LWIP_RX_ETH_BUFFER)
 				ethernetif->lwipRxIndexIsr = 0;
 
-			enh_alt_irq_enable_all();
+			alt_irq_enable_all(context);
 
 #if LWIP_RECEIVE_SEMAPHORE
 			// we can't use the LwIP sys_signal_sem since this can't be used in an ISR

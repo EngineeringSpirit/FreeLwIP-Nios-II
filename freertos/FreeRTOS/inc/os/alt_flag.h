@@ -81,18 +81,19 @@
  *
  */ 
 
+#include <stdlib.h>
+
+#include "priv/alt_flag_freertos.h"
 #include "priv/alt_no_error.h"
+#include <os/flags.h>
 
-#define ALT_FLAG_GRP(group)
-#define ALT_EXTERN_FLAG_GRP(group) 
-#define ALT_STATIC_FLAG_GRP(group)
+#define ALT_FLAG_GRP(group)									EventGroupHandle_t group;
+#define ALT_EXTERN_FLAG_GRP(group) 							extern ALT_FLAG_GRP(group)
+#define ALT_STATIC_FLAG_GRP(group)							static ALT_FLAG_GRP(group)
        
-#define ALT_FLAG_CREATE(group, flags)						alt_no_error ()   
-#define ALT_FLAG_PEND(group, flags, wait_type, timeout)		alt_no_error ()
-#define ALT_FLAG_POST(group, flags, opt)					alt_no_error ()
 
-#ifndef ALT_SINGLE_THREADED
-#define ALT_SINGLE_THREADED
-#endif
+#define ALT_FLAG_CREATE(group, flags)						alt_event_create(group)
+#define ALT_FLAG_PEND(group, flags, wait_type, timeout)		alt_event_pend(group, flags, wait_type, timeout)
+#define ALT_FLAG_POST(group, flags, opt)					alt_event_post(group, flags, opt)
 
 #endif /* __ALT_FLAG_H__ */

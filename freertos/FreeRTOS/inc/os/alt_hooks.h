@@ -17,8 +17,11 @@
 /*
  * Semaphores used to protect the heap and environment
  */
-extern xSemaphoreHandle alt_heapsem;
-extern xSemaphoreHandle alt_envsem;
+extern SemaphoreHandle_t alt_heapsem;
+extern SemaphoreHandle_t alt_envsem;
+
+extern void freertosIntEnter(void);
+extern void freertosIntExit(void);
 
 /*
  * Tick handler for FreeRTOS
@@ -32,15 +35,15 @@ extern void vPortSysTickHandler(void);
 #define ALT_OS_TIME_TICK	vPortSysTickHandler
 #define ALT_OS_INIT()		alt_heapsem = xSemaphoreCreateRecursiveMutex();		\
 							alt_envsem = xSemaphoreCreateRecursiveMutex();
-#define ALT_OS_STOP()		// vTaskEndScheduler();
+#define ALT_OS_STOP()		vPortEndScheduler
 
-#define ALT_OS_INT_ENTER()	// ....
-#define ALT_OS_INT_EXIT()	// ....
+#define ALT_OS_INT_ENTER	freertosIntEnter
+#define ALT_OS_INT_EXIT		freertosIntExit
 
 #endif /* ALT_ASM_SRC */
 
 /* These macros are used by the VIC funnel assembly code */
-#define ALT_OS_INT_ENTER_ASM    //call ....
-#define ALT_OS_INT_EXIT_ASM     //call ....
+#define ALT_OS_INT_ENTER_ASM    call freertosIntEnter
+#define ALT_OS_INT_EXIT_ASM     call freertosIntExit
 
 #endif /* __ALT_HOOKS_H__ */

@@ -51,10 +51,10 @@
 
 #if NO_SYS == 0
 
-typedef xSemaphoreHandle				sys_sem_t;
-typedef xQueueHandle					sys_mbox_t;
-typedef xSemaphoreHandle				sys_mutex_t;
-typedef xTaskHandle						sys_thread_t;
+typedef SemaphoreHandle_t				sys_sem_t;
+typedef QueueSetHandle_t				sys_mbox_t;
+typedef SemaphoreHandle_t				sys_mutex_t;
+typedef TaskHandle_t					sys_thread_t;
 
 #define SYS_MBOX_NULL					(sys_mbox_t)0
 #define SYS_SEM_NULL					(sys_sem_t)0

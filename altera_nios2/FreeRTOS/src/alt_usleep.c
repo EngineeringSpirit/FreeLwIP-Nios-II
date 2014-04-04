@@ -70,7 +70,7 @@ unsigned int ALT_USLEEP (unsigned int us)
    * since the system is still running in a single-threaded mode.
    */ 
 
-  if (!xTaskGetSchedulerState())
+  if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
   {
     return alt_busy_sleep (us);
   }

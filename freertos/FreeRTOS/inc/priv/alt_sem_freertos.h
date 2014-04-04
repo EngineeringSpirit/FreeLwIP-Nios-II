@@ -14,6 +14,8 @@
  * HAL. 
  */
 
+#include <stdlib.h>
+
 #include "FreeRTOS.h"
 #include "projdefs.h"
 #include "semphr.h"
@@ -28,10 +30,10 @@ extern "C"
  * alt_sem_create() is a wrapper for xSemaphoreCreateCounting(). The return value is 0 if 
  * the semaphore has been successfully created, or non-zero otherwise.
  */
-static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_create (xSemaphoreHandle* sem, alt_u16 value)
+static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_create (SemaphoreHandle_t* sem, alt_u16 value)
 {
 	*sem = xSemaphoreCreateCounting(value ? value : 1, value);
-	return *sem ? 0 : -1;
+	return (*sem != NULL) ? EXIT_SUCCESS : EXIT_FAILURE;
 } 
 
 /*
@@ -39,9 +41,18 @@ static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_create (xSemaphoreHandle* sem, a
  * converted into the functions return value.
  */
 
-static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_pend (xSemaphoreHandle sem, alt_u16 timeout)
+static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_pend (SemaphoreHandle_t sem, alt_u16 timeout)
 {
-	return xSemaphoreTake(sem, timeout) ? 0 : -1;
+	return (xSemaphoreTake(sem, timeout) == pdTRUE) ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+/*
+ * alt_sem_post() is a wrapper for xSemaphoreGive(), with the error code
+ * converted into the functions return value.
+ */
+static ALT_INLINE int ALT_ALWAYS_INLINE alt_sem_post (SemaphoreHandle_t sem)
+{
+	return (xSemaphoreGive (sem) == pdTRUE) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 #ifdef __cplusplus

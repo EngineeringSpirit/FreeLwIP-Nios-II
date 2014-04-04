@@ -7,14 +7,14 @@
 create_os FreeRTOS
 
 # Set UI display name
-set_sw_property display_name "Real Time Engineers Ltd FreeRTOS 7.2.0"
+set_sw_property display_name "Real Time Engineers Ltd FreeRTOS 8.0.0"
 
 # This OS "extends" HAL BSP type
 set_sw_property extends_bsp_type HAL
 
 # The version of this software
 # Note: this reflects the version of the Altera release that this file
-#       shipped in. The FreeRTOS version is 7.2.0
+#       shipped in. The FreeRTOS version is 8.0.0
 set_sw_property version 12.0
 
 # Location in generated BSP that above sources will be copied into
@@ -34,9 +34,10 @@ set_sw_property isr_preemption_supported true
 
 # C source files
 add_sw_property c_source FreeRTOS/src/alt_env_lock.c
-add_sw_property c_source FreeRTOS/src/alt_malloc_lock.c
 add_sw_property c_source FreeRTOS/src/alt_main.c
+add_sw_property c_source FreeRTOS/src/alt_malloc_lock.c
 add_sw_property c_source FreeRTOS/src/croutine.c
+add_sw_property c_source FreeRTOS/src/event_groups.c
 add_sw_property c_source FreeRTOS/src/heap_3.c
 add_sw_property c_source FreeRTOS/src/list.c
 add_sw_property c_source FreeRTOS/src/port.c
@@ -50,6 +51,7 @@ add_sw_property asm_source FreeRTOS/src/port_asm.S
 
 # Include files
 add_sw_property include_source FreeRTOS/inc/croutine.h
+add_sw_property include_source FreeRTOS/inc/event_groups.h
 add_sw_property include_source FreeRTOS/inc/FreeRTOS.h
 add_sw_property include_source FreeRTOS/inc/FreeRTOSConfig.h
 add_sw_property include_source FreeRTOS/inc/list.h
@@ -57,9 +59,11 @@ add_sw_property include_source FreeRTOS/inc/mpu_wrappers.h
 add_sw_property include_source FreeRTOS/inc/os/alt_flag.h
 add_sw_property include_source FreeRTOS/inc/os/alt_hooks.h
 add_sw_property include_source FreeRTOS/inc/os/alt_sem.h
+add_sw_property include_source FreeRTOS/inc/os/flags.h
 add_sw_property include_source FreeRTOS/inc/portable.h
 add_sw_property include_source FreeRTOS/inc/portmacro.h
 add_sw_property include_source FreeRTOS/inc/priv/alt_sem_freertos.h
+add_sw_property include_source FreeRTOS/inc/priv/alt_flag_freertos.h
 add_sw_property include_source FreeRTOS/inc/projdefs.h
 add_sw_property include_source FreeRTOS/inc/queue.h
 add_sw_property include_source FreeRTOS/inc/semphr.h
@@ -68,13 +72,11 @@ add_sw_property include_source FreeRTOS/inc/task.h
 add_sw_property include_source FreeRTOS/inc/timers.h
 
 # Overridden HAL files
+add_sw_property excluded_hal_source HAL/src/alt_exception_trap.S
+
+add_sw_property excluded_hal_source HAL/src/alt_main.c
 add_sw_property excluded_hal_source HAL/src/alt_env_lock.c
 add_sw_property excluded_hal_source HAL/src/alt_malloc_lock.c
-add_sw_property excluded_hal_source HAL/src/alt_exception_entry.S
-add_sw_property excluded_hal_source HAL/src/alt_exception_trap.S
-add_sw_property excluded_hal_source HAL/src/alt_irq_entry.S
-add_sw_property excluded_hal_source HAL/src/alt_main.c
-add_sw_property excluded_hal_source HAL/src/alt_software_exception.S
 add_sw_property excluded_hal_source HAL/inc/os/alt_flag.h
 add_sw_property excluded_hal_source HAL/inc/os/alt_hooks.h
 add_sw_property excluded_hal_source HAL/inc/os/alt_sem.h
@@ -110,7 +112,7 @@ The tick interrupt is used to measure time. Therefore a higher tick frequency me
 
 More than one task can share the same priority. The kernel will share processor time between tasks of the same priority by switching between the tasks during each RTOS tick. A high tick rate frequency will therefore also have the effect of reducing the 'time slice' given to each task."
 
-add_sw_setting boolean system_h_define system.idle_should_yield OS_IDLE_SHOULD_YIELD 0 "This parameter controls the behaviour of tasks at the idle priority. It only has an effect if:
+add_sw_setting boolean system_h_define system.idle_should_yield OS_IDLE_SHOULD_YIELD 1 "This parameter controls the behaviour of tasks at the idle priority. It only has an effect if:
 The preemptive scheduler is being used.
 The users application creates tasks that run at the idle priority.
 Tasks that share the same priority will time slice. Assuming none of the tasks get preempted, it might be assumed that each task of at a given priority will be allocated an equal amount of processing time - and if the shared priority is above the idle priority then this is indeed the case.
@@ -163,7 +165,7 @@ To use this method in combination with method 1 set configCHECK_FOR_STACK_OVERFL
 #
 # Debug Settings
 #
-add_sw_setting boolean system_h_define debug.use_trace_facility OS_USE_TRACE_FACILITY 1 "Set to 1 if you wish to include additional structure members and functions to assist with execution visualisation and tracing."
+add_sw_setting boolean system_h_define debug.use_trace_facility OS_USE_TRACE_FACILITY 0 "Set to 1 if you wish to include additional structure members and functions to assist with execution visualisation and tracing."
 
 
 #

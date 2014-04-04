@@ -75,9 +75,9 @@
 #define configUSE_PREEMPTION						OS_USE_PREEMPTION
 #define configUSE_IDLE_HOOK							OS_USE_IDLE_HOOK
 #define configUSE_TICK_HOOK							OS_USE_TICK_HOOK
-#define configTICK_RATE_HZ							( ( portTickType ) OS_TICK_RATE_HZ )
+#define configTICK_RATE_HZ							( ( TickType_t ) OS_TICK_RATE_HZ )
 #define configCPU_CLOCK_HZ							( ( unsigned long ) OS_CLK_FREQ )
-#define configMAX_PRIORITIES						( ( unsigned portBASE_TYPE ) OS_MAX_PRIORITIES )
+#define configMAX_PRIORITIES						( ( BaseType_t ) OS_MAX_PRIORITIES )
 #define configMINIMAL_STACK_SIZE					( OS_MINIMAL_STACK_SIZE )
 #define configISR_STACK_SIZE						configMINIMAL_STACK_SIZE
 #define configTOTAL_HEAP_SIZE						( ( size_t ) OS_TOTAL_HEAP_SIZE )
@@ -92,12 +92,19 @@
 #define configQUEUE_REGISTRY_SIZE					OS_QUEUE_REGISTER_SIZE
 #define configUSE_ALTERNATIVE_API					OS_USE_ALTERNATIVE_API
 #define configUSE_MALLOC_FAILED_HOOK				OS_USE_MALLOC_FAILED_HOOK
+#define configUSE_NEWLIB_REENTRANT					OS_THREAD_SAFE_NEWLIB
+#define configENABLE_BACKWARD_COMPATIBILITY			0
 
 // Timer settings
 #define configUSE_TIMERS                			1
+#define INCLUDE_xTimerPendFunctionCall				1
 #define configTIMER_TASK_PRIORITY       			OS_TIMER_TASK_PRIORITY
 #define configTIMER_QUEUE_LENGTH        			OS_TIMER_QUEUE_LENGTH
 #define configTIMER_TASK_STACK_DEPTH    			configMINIMAL_STACK_SIZE
+
+
+// Event Settings
+#define INCLUDE_xEventGroupSetBitFromISR			1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 						OS_USE_CO_ROUTINES

@@ -19,13 +19,13 @@
 #    by writing to Richard Barry, contact details for whom are available on the
 #    FreeRTOS WEB site.
 #
-# Created by Engineering Spirit (c) 2012-2013 http://engineering-spirit.nl/
+# Created by Engineering Spirit (c) 2012-2014 http://engineering-spirit.nl/
 #
 
 # header
 cat << EOF
 /***************************************************************************\ 
-| Welcome to the FreeRTOS v7.2.0 with LwIP 1.4.1 installer!                 |
+| Welcome to the FreeRTOS v8.0.0 with LwIP 1.4.1 installer!                 |
 | This installer will will create an FreeRTOS BSP and LwIP software package |
 | into your Nios II IDE. We'll also create a Demo application which you can |
 | chose in your IDE to see how to work with this type of BSP / TCP/IP stack |
@@ -47,7 +47,7 @@ cat << EOF
 | FreeRTOS WEB site.                                                        |
 |                                                                           |
 | Installer provided by:                                                    |
-|         Engineering Spirit (c) 2012 http://engineering-spirit.nl/         |
+|         Engineering Spirit (c) 2014 http://engineering-spirit.nl/         |
 \***************************************************************************/
 
 EOF
@@ -86,42 +86,8 @@ if [ "${ANS}" != "yes" ] && [ "${ANS}" != "y" ]; then
 fi;
 
 # make directories just to be sure
-mkdir -p FreeRTOS_src 2> /dev/null;
-mkdir -p lwip 2> /dev/null;
-
-# auto update for later
-which 2> /dev/null;
-if [ $? -eq 255 ] && false; then
-	if which wget &> /dev/null && which curl &> /dev/null && which unzip &> /dev/null; then
-		# check for FreeRTOS update
-		NEW_VERSION=`curl "http://sourceforge.net/projects/freertos/files/FreeRTOS/" -s | grep -o "V[0-9].[0-9].[0-9]" | head -1`;
-		CUR_VERSION=`cat FreeRTOS_src/.cur_version 2>&1`;
-		
-		if [ "${NEW_VERSION}" != "${CUR_VERSION}" ]; then
-			echo -e "\nNew FreeRTOS version found: ${NEW_VERSION}\n Downloading please wait...";
-			wget "http://downloads.sourceforge.net/project/freertos/FreeRTOS/${NEW_VERSION}/FreeRTOS${NEW_VERSION}.zip" -O FreeRTOS_src/FreeRTOS${NEW_VERSION}.zip;
-			cd FreeRTOS_src;
-			echo "Download done! Unpacking... please wait...";
-			unzip -qq -o FreeRTOS${NEW_VERSION}.zip; # -qq
-			echo "Updating files...";
-			rm -r Demo License Source readme.txt 2> /dev/null;
-			mv FreeRTOS${NEW_VERSION}/FreeRTOS/* .;
-			rm -r FreeRTOS${NEW_VERSION} FreeRTOS${NEW_VERSION}.zip;
-			cd ..;
-			echo ${NEW_VERSION} > FreeRTOS_src/.cur_version;
-		else
-			echo -e "\nFreeRTOS up to date! Using: ${NEW_VERSION}\n";
-		fi;
-		
-		# can't auto update LwIP because of a lot of changes to the default LwIP
-		# source tree
-	fi;
-fi;
-
-if [ ! -e "FreeRTOS_src" ] || [ ! -e "lwip" ]; then
-	# dummy... will always be false now ;)
-	echo "Can't find FreeRTOS / LwIP sources! Please download the latest sources and place them in the FreeRTOS_src!" 1>&2;
-fi;
+#mkdir -p FreeRTOS_src 2> /dev/null;
+#mkdir -p lwip 2> /dev/null;
 
 # set some other path
 COMPONENTS="${ALT_PATH}/nios2eds/components";
@@ -139,51 +105,47 @@ chmod -Rf u+rw lwip > /dev/null
 echo -e "\n1. Preparing software Nios II Packages!";
 
 # copy all source files we need
-echo "    - Copy FreeRTOS sources";
-cp FreeRTOS_src/Source/croutine.c "${INST_PATH}/freertos/FreeRTOS/src";
-cp FreeRTOS_src/Source/portable/MemMang/heap_3.c "${INST_PATH}/freertos/FreeRTOS/src";
-cp FreeRTOS_src/Source/list.c "${INST_PATH}/freertos/FreeRTOS/src";
-
-cp nios2_freertos_port/port.c "${INST_PATH}/freertos/FreeRTOS/src/";
-cp nios2_freertos_port/port_asm.S "${INST_PATH}/freertos/FreeRTOS/src/";
-
-cp FreeRTOS_src/Source/queue.c "${INST_PATH}/freertos/FreeRTOS/src";
-cp FreeRTOS_src/Source/tasks.c "${INST_PATH}/freertos/FreeRTOS/src";
-cp FreeRTOS_src/Source/timers.c "${INST_PATH}/freertos/FreeRTOS/src";
+#echo "    - Copy FreeRTOS sources";
+#cp FreeRTOS_src/Source/croutine.c "${INST_PATH}/freertos/FreeRTOS/src";
+#cp FreeRTOS_src/Source/portable/MemMang/heap_3.c "${INST_PATH}/freertos/FreeRTOS/src";
+#cp FreeRTOS_src/Source/list.c "${INST_PATH}/freertos/FreeRTOS/src";
+#cp nios2_freertos_port/port.c "${INST_PATH}/freertos/FreeRTOS/src/";
+#cp nios2_freertos_port/port_asm.S "${INST_PATH}/freertos/FreeRTOS/src/";
+#cp FreeRTOS_src/Source/queue.c "${INST_PATH}/freertos/FreeRTOS/src";
+#cp FreeRTOS_src/Source/tasks.c "${INST_PATH}/freertos/FreeRTOS/src";
+#cp FreeRTOS_src/Source/timers.c "${INST_PATH}/freertos/FreeRTOS/src";
 
 # copy all header files we need
-echo "    - Copy FreeRTOS headers";
-cp FreeRTOS_src/Source/include/croutine.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/FreeRTOS.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/list.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/mpu_wrappers.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/portable.h "${INST_PATH}/freertos/FreeRTOS/inc";
-
-cp nios2_freertos_port/portmacro.h "${INST_PATH}/freertos/FreeRTOS/inc";
-
-cp FreeRTOS_src/Source/include/projdefs.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/queue.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/semphr.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/StackMacros.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/task.h "${INST_PATH}/freertos/FreeRTOS/inc";
-cp FreeRTOS_src/Source/include/timers.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#echo "    - Copy FreeRTOS headers";
+#cp FreeRTOS_src/Source/include/croutine.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/FreeRTOS.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/list.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/mpu_wrappers.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/portable.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp nios2_freertos_port/portmacro.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/projdefs.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/queue.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/semphr.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/StackMacros.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/task.h "${INST_PATH}/freertos/FreeRTOS/inc";
+#cp FreeRTOS_src/Source/include/timers.h "${INST_PATH}/freertos/FreeRTOS/inc";
 
 # copy demo files
-echo "    - Copy FreeRTOS demo files";
-mkdir -p "${INST_PATH}/freertos_demo/common";
-mkdir -p "${INST_PATH}/freertos_demo/inc";
-cp FreeRTOS_src/Demo/Common/minimal/BlockQ.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/blocktim.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/countsem.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/death.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/dynamic.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/GenQTest.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/integer.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/PollQ.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/QPeek.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/recmutex.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/minimal/semtest.c "${INST_PATH}/freertos_demo/common/";
-cp FreeRTOS_src/Demo/Common/include/* "${INST_PATH}/freertos_demo/inc";
+#echo "    - Copy FreeRTOS demo files";
+#mkdir -p "${INST_PATH}/freertos_demo/common";
+#mkdir -p "${INST_PATH}/freertos_demo/inc";
+#cp FreeRTOS_src/Demo/Common/minimal/BlockQ.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/blocktim.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/countsem.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/death.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/dynamic.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/GenQTest.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/integer.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/PollQ.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/QPeek.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/recmutex.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/minimal/semtest.c "${INST_PATH}/freertos_demo/common/";
+#cp FreeRTOS_src/Demo/Common/include/* "${INST_PATH}/freertos_demo/inc";
 
 echo -e "\n2. Copying packages to Nios II IDE"
 
@@ -265,30 +227,30 @@ if [ $? -eq 0 ]; then
 	echo "    - "`echo "${OUTPUT}" | grep -o "Found [0-9]* components"`;
 
 	# clean up all copied stuff
-	rm "${INST_PATH}/freertos/FreeRTOS/src/croutine.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/heap_3.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/list.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/port.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/port_asm.S";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/queue.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/tasks.c";
-	rm "${INST_PATH}/freertos/FreeRTOS/src/timers.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/croutine.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/heap_3.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/list.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/port.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/port_asm.S";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/queue.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/tasks.c";
+	#rm "${INST_PATH}/freertos/FreeRTOS/src/timers.c";
 
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/croutine.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/FreeRTOS.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/list.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/mpu_wrappers.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/portable.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/portmacro.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/projdefs.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/queue.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/semphr.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/StackMacros.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/task.h";
-	rm "${INST_PATH}/freertos/FreeRTOS/inc/timers.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/croutine.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/FreeRTOS.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/list.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/mpu_wrappers.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/portable.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/portmacro.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/projdefs.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/queue.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/semphr.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/StackMacros.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/task.h";
+	#rm "${INST_PATH}/freertos/FreeRTOS/inc/timers.h";
 
-	rm -r "${INST_PATH}/freertos_demo/common/";
-	rm -r "${INST_PATH}/freertos_demo/inc";
+	#rm -r "${INST_PATH}/freertos_demo/common/";
+	#rm -r "${INST_PATH}/freertos_demo/inc";
 	
 	# Inform the user we are done here...
 	echo -e "\n5. Start your Nios II IDE and create a new BSP with FreeRTOS and include the LwIP software package, our create the new FreeRTOS + LwIP demo application";

@@ -28,7 +28,7 @@
 *                                                                             *
 ******************************************************************************/
 
-// Provided by Engineering Spirit (c) 2012
+// Provided by Engineering Spirit (c) 2014
 
 #include "system.h"
 
@@ -48,14 +48,14 @@
 
 /* semaphore to protect the heap */
 
-xSemaphoreHandle alt_heapsem;
+SemaphoreHandle_t alt_heapsem;
 
 /* __malloc_lock needs to provide recursive mutex locking */
 
 void __malloc_lock ( struct _reent *_r )
 {
 #if OS_THREAD_SAFE_NEWLIB
-	if (!xTaskGetSchedulerState())
+	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 		return;
 
 	// wait for the mutex to be released
@@ -71,7 +71,7 @@ void __malloc_lock ( struct _reent *_r )
 void __malloc_unlock ( struct _reent *_r )
 {
 #if OS_THREAD_SAFE_NEWLIB
-	if (!xTaskGetSchedulerState())
+	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 		return;
 	  
 	xSemaphoreGiveRecursive(alt_heapsem);

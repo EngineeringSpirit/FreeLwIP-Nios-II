@@ -88,7 +88,7 @@ void sys_sem_signal(sys_sem_t *sem)
  */
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
-	portTickType nStartTime, nEndTime, nElapsed;
+	TickType_t nStartTime, nEndTime, nElapsed;
 
 	nStartTime = xTaskGetTickCount();
 
@@ -208,7 +208,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
  */
 void sys_mbox_post(sys_mbox_t *mbox, void *data)
 {
-	xQueueSend(*mbox, &data, (portTickType)(archPOST_BLOCK_TIME_MS / portTICK_RATE_MS));
+	xQueueSend(*mbox, &data, (TickType_t)(archPOST_BLOCK_TIME_MS / portTICK_RATE_MS));
 }
 
 /**
@@ -239,7 +239,7 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *data)
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 {
 	void *dummyptr;
-	portTickType nStartTime, nEndTime, nElapsed;
+	TickType_t nStartTime, nEndTime, nElapsed;
 
 	nStartTime = xTaskGetTickCount();
 
@@ -311,10 +311,10 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
  */
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
-	xTaskHandle objTask;
+	TaskHandle_t objTask;
 	int result = pdFAIL;
 
-	result = xTaskCreate(thread, (signed portCHAR*)name, stacksize, arg, prio, &objTask);
+	result = xTaskCreate(thread, (const char*)name, stacksize, arg, prio, &objTask);
 
 	return (result == pdPASS) ? objTask : NULL;
 }

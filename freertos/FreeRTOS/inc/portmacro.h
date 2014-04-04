@@ -71,52 +71,52 @@ extern "C" {
  *-----------------------------------------------------------
  */
 
-/* Type definitions. */
-#define portCHAR		char
-#define portFLOAT		float
-#define portDOUBLE		double
-#define portLONG		long
-#define portSHORT		short
-#define portSTACK_TYPE	unsigned portLONG
-#define portBASE_TYPE	long
+typedef long						BaseType_t;
+typedef unsigned long				UBaseType_t;
+typedef uint32_t					StackType_t;
+
+extern void freertosContextSwitch(void);
+extern void freertosIntContextSwitch(void);
+
+extern void* GetStackPointer();
+extern void* GetFramePointer();
 
 #if( configUSE_16_BIT_TICKS == 1 )
-	typedef unsigned portSHORT portTickType;
-	#define portMAX_DELAY ( portTickType ) 0xffff
+typedef uint16_t					TickType_t;
+#define portMAX_DELAY				(TickType_t) 0xffff
 #else
-	typedef unsigned portLONG portTickType;
-	#define portMAX_DELAY ( portTickType ) 0xffffffff
+typedef uint32_t					TickType_t;
+#define portMAX_DELAY				(TickType_t) 0xffffffff
 #endif
 /*-----------------------------------------------------------*/	
 
 /* Architecture specifics. */
 #define portSTACK_GROWTH				( -1 )
-#define portTICK_RATE_MS				( ( portTickType ) 1000 / configTICK_RATE_HZ )		
+#define portTICK_RATE_MS				( ( TickType_t ) 1000 / configTICK_RATE_HZ )
 #define portBYTE_ALIGNMENT				4
-#define portNOP()                   	asm volatile ( "NOP" )
 #define portCRITICAL_NESTING_IN_TCB		1
 /*-----------------------------------------------------------*/	
 
 extern void vTaskSwitchContext( void );
-#define portYIELD()									asm volatile ( "trap" );
+
+#define portYIELD()									vPortYieldTask()
 #define portEND_SWITCHING_ISR( xSwitchRequired ) 	if( xSwitchRequired ) 	vTaskSwitchContext()
-
-
-/* Include the port_asm.S file where the Context saving/restoring is defined. */
-__asm__( "\n\t.globl	save_context" );
+#define portYIELD_FROM_ISR( xSwitchRequired ) 		portEND_SWITCHING_ISR( xSwitchRequired )
 
 /*-----------------------------------------------------------*/
 
 extern void vTaskEnterCritical( void );
 extern void vTaskExitCritical( void );
 
+#if 0
 extern void enh_alt_irq_disable_all( void );
 extern void enh_alt_irq_enable_all( void );
+#endif
 
-#define portDISABLE_INTERRUPTS()	enh_alt_irq_disable_all()
-#define portENABLE_INTERRUPTS()		enh_alt_irq_enable_all()
-#define portENTER_CRITICAL()        if (xTaskGetSchedulerState()) vTaskEnterCritical()
-#define portEXIT_CRITICAL()         if (xTaskGetSchedulerState()) vTaskExitCritical()
+#define portDISABLE_INTERRUPTS()	alt_irq_disable_all()
+#define portENABLE_INTERRUPTS()		alt_irq_enable_all(0x01)
+#define portENTER_CRITICAL()        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) vTaskEnterCritical()
+#define portEXIT_CRITICAL()         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) vTaskExitCritical()
 /*-----------------------------------------------------------*/
 
 /* Task function macros as described on the FreeRTOS.org WEB site. */

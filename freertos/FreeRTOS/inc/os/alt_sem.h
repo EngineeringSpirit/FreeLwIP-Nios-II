@@ -72,16 +72,16 @@
  *
  */ 
 
- // Provided by Engineering Spirit (c) 2012
+ // Provided by Engineering Spirit (c) 2014
  
 #include "priv/alt_sem_freertos.h"
 
-#define ALT_SEM(sem)					xSemaphoreHandle sem;
-#define ALT_EXTERN_SEM(sem)				extern xSemaphoreHandle sem;
-#define ALT_STATIC_SEM(sem)				static xSemaphoreHandle sem;
+#define ALT_SEM(sem)					SemaphoreHandle_t sem;
+#define ALT_EXTERN_SEM(sem)				extern ALT_SEM(sem)
+#define ALT_STATIC_SEM(sem)				static ALT_SEM(sem)
 
-#define ALT_SEM_CREATE(sem, value)		alt_sem_create (sem, value)
-#define ALT_SEM_PEND(sem, timeout)		alt_sem_pend (sem, timeout)
-#define ALT_SEM_POST(sem)				xSemaphoreGive (sem)
+#define ALT_SEM_CREATE(sem, value)		alt_sem_create(sem, value)
+#define ALT_SEM_PEND(sem, timeout)		alt_sem_pend(sem, timeout)
+#define ALT_SEM_POST(sem)				alt_sem_post(sem)
 
 #endif /* __ALT_SEM_H__ */
