@@ -25,7 +25,7 @@
 # header
 cat << EOF
 /***************************************************************************\ 
-| Welcome to the FreeRTOS v8.0.0 with LwIP 1.4.1 installer!                 |
+| Welcome to the FreeRTOS v8.0.1 with LwIP 1.4.1 installer!                 |
 | This installer will will create an FreeRTOS BSP and LwIP software package |
 | into your Nios II IDE. We'll also create a Demo application which you can |
 | chose in your IDE to see how to work with this type of BSP / TCP/IP stack |
@@ -261,5 +261,5 @@ else
 	echo " --- FAILURE --- FAILURE --- FAILURE --- FAILURE --- FAILURE ---";
 fi;
 
-echo -e "\n Done!\nPress the any key to continue...";
+echo -e "\n Done!\nPress enter to continue...";
 read

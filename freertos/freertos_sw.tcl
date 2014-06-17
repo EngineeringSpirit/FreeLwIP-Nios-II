@@ -203,7 +203,7 @@ add_sw_setting decimal_number system_h_define co_routines.max_co_routine_priorit
 #
 #add_sw_setting boolean system_h_define timers.use_timers OS_USE_TIMERS 1 "Set to 1 to include software timer functionality, or 0 to omit software timer functionality. See the FreeRTOS software timers page for a full description."
 
-add_sw_setting decimal_number system_h_define timers.timer_task_priority OS_TIMER_TASK_PRIORITY 5 "Sets the priority of the software timer service/daemon task. See the FreeRTOS software timers page for a full description."
+add_sw_setting decimal_number system_h_define timers.timer_task_priority OS_TIMER_TASK_PRIORITY 4 "Sets the priority of the software timer service/daemon task. See the FreeRTOS software timers page for a full description."
 
 add_sw_setting decimal_number system_h_define timers.timer_queue_length OS_TIMER_QUEUE_LENGTH 10 "Sets the length of the software timer command queue. See the FreeRTOS software timers page for a full description."
 

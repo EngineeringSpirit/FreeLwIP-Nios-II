@@ -93,6 +93,7 @@ add_sw_property include_source FreeRTOS/inc/altera_avalon_tse.h
 add_sw_property include_source FreeRTOS/inc/ping.h
 add_sw_property include_source FreeRTOS/inc/altera_tse_ethernetif.h
 add_sw_property include_source FreeRTOS/inc/lwipopts.h
+add_sw_property include_source FreeRTOS/inc/lwippools.h
 add_sw_property include_source FreeRTOS/inc/lwip_main.h
 add_sw_property include_source FreeRTOS/inc/triple_speed_ethernet_regs.h
 add_sw_property include_source FreeRTOS/inc/arch/cc.h
@@ -188,6 +189,7 @@ add_sw_setting boolean system_h_define proto.enable_snmp CONF_LWIP_PROTO_SNMP fa
 add_sw_setting boolean system_h_define proto.enable_igmp CONF_LWIP_PROTO_IGMP false "Enable IGMP support"
 add_sw_setting boolean system_h_define proto.enable_dns CONF_LWIP_PROTO_DNS false "Enable DNS support"
 add_sw_setting boolean system_h_define proto.enable_udp CONF_LWIP_PROTO_UDP true "Enable UDP support"
+add_sw_setting boolean system_h_define proto.enable_udp_lite CONF_LWIP_PROTO_UDP_LITE false "Enable UDP Lite support"
 add_sw_setting boolean system_h_define proto.enable_tcp CONF_LWIP_PROTO_TCP true "Enable TCP support"
 add_sw_setting boolean system_h_define proto.enable_dhcp CONF_LWIP_PROTO_DHCP true "Enable DHCP support"
 
@@ -196,13 +198,23 @@ add_sw_setting decimal_number system_h_define connections.udp_pcb_count CONF_LWI
 add_sw_setting decimal_number system_h_define connections.tcp_pcb_count CONF_LWIP_TCP_PCB 15 "Number of TCP sockets supported"
 add_sw_setting decimal_number system_h_define connections.tcp_listen_pcb_count CONF_LWIP_TCP_PCB_LISTEN 10 "Number of TCP Listening sockets supported"
 
-add_sw_setting decimal_number system_h_define memory.mem_size CONF_LWIP_MEM_SIZE 32768 "Size of the memory poll"
+add_sw_setting boolean system_h_define memory.use_memory_pools CONF_LWIP_USE_MEMPOOLS false "When memory pools are not used a memory block with memory size of mem_size is used."
+add_sw_setting decimal_number system_h_define memory.mem_size CONF_LWIP_MEM_SIZE 32768 "Size of the memory pool, only used when not using the memory pool"
 add_sw_setting boolean system_h_define memory.overflow_check CONF_LWIP_OVERFLOW_CHECK false "Do memory overflow checking"
 add_sw_setting decimal_number system_h_define memory.pbuf_count CONF_LWIP_PBUF_COUNT 32 "Number of packet buffers supported"
 
+add_sw_setting boolean system_h_define memory.pools.malloc_mem_pool.try_bigger_pools CONF_LWIP_MALLOC_MEMPOOL_TRY_BIGGER_POOLS false "If there is no free buffer with the given pool, can we use a bigger pool? Warning: This could waste memory, but also make the system more reliable."
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_64 CONF_LWIP_MALLOC_MEMPOOL_64 4 "The number of 64 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_128 CONF_LWIP_MALLOC_MEMPOOL_128 4 "The number of 128 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_256 CONF_LWIP_MALLOC_MEMPOOL_256 8 "The number of 256 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_512 CONF_LWIP_MALLOC_MEMPOOL_512 8 "The number of 512 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_512 CONF_LWIP_MALLOC_MEMPOOL_768 8 "The number of 768 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_1024 CONF_LWIP_MALLOC_MEMPOOL_1024 10 "The number of 1024 byte buffers to place in the memory pool"
+add_sw_setting decimal_number system_h_define memory.pools.malloc_mem_pool.buffers_1536 CONF_LWIP_MALLOC_MEMPOOL_1536 20 "The number of 1536 byte buffers to place in the memory pool"
+
 add_sw_setting boolean system_h_define loopback CONF_LWIP_LOOPBACK false "Loopback outgoing traffic to our selfs"
 add_sw_setting boolean system_h_define loopback_if CONF_LWIP_LOOPBACKIF false "Create a loopback interface 'lo'"
-add_sw_setting boolean system_h_define stats CONF_LWIP_STATS true "Keep track of the LwIP traffic statistics"
+add_sw_setting boolean system_h_define stats CONF_LWIP_STATS false "Keep track of the LwIP traffic statistics"
 add_sw_setting boolean system_h_define ip_forward CONF_LWIP_IP_FORWARD false "Keep track of the LwIP traffic statistics"
 add_sw_setting decimal_number system_h_define ttl CONF_LWIP_DEFAULT_TTL 64 "The default TTL (Time To Life) set to a packet"
 

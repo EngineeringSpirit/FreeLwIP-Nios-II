@@ -63,6 +63,8 @@
 
 #include "system.h"
 
+#include <assert.h>
+
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
@@ -121,6 +123,8 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil						OS_vTaskDelayUntil
 #define INCLUDE_vTaskDelay							OS_vTaskDelay
 #define INCLUDE_uxTaskGetStackHighWaterMark			OS_uxTaskGetStackHighWaterMark
+#define INCLUDE_eTaskGetState						1
+#define INCLUDE_pcTaskGetTaskName					1
 
 /* The priority at which the tick interrupt runs.  This should probably be
 kept at 1. */
@@ -130,6 +134,8 @@ kept at 1. */
 be called.  Only API functions that end in ...FromISR() can be used within
 interrupts. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY		OS_MAX_SYSCALL_INTERRUPT_PRIORITY
+
+#define configASSERT( x )							assert( (x) )
 
 #define CONCAT(a,b)									a ## b
 

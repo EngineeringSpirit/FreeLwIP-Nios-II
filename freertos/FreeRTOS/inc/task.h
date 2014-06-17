@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V8.0.0 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -24,10 +24,10 @@
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>! NOTE: The modification to the GPL is included to allow you to distribute
-    >>! a combined work that includes FreeRTOS without being obliged to provide
-    >>! the source code for proprietary components outside of the FreeRTOS
-    >>! kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -81,10 +81,10 @@ extern "C" {
  * MACROS AND DEFINITIONS
  *----------------------------------------------------------*/
 
-#define tskKERNEL_VERSION_NUMBER "V8.0.0"
+#define tskKERNEL_VERSION_NUMBER "V8.0.1"
 #define tskKERNEL_VERSION_MAJOR 8
 #define tskKERNEL_VERSION_MINOR 0
-#define tskKERNEL_VERSION_BUILD 0
+#define tskKERNEL_VERSION_BUILD 1
 
 /**
  * task. h
@@ -1256,6 +1256,39 @@ TaskHandle_t xTaskGetIdleTaskHandle( void );
 	</pre>
  */
 UBaseType_t uxTaskGetSystemState( TaskStatus_t * const pxTaskStatusArray, const UBaseType_t uxArraySize, uint32_t * const pulTotalRunTime );
+
+/**
+ * uxTaskGetState() populates an TaskStatus_t structure for the given TaskHandle_t.
+ * TaskStatus_t structures contain, among other things, members
+ * for the task handle, task name, task priority, task state, and total amount
+ * of run time consumed by the task.  See the TaskStatus_t structure
+ * definition in this file for the full member list.
+ *
+ * @param xTask A pointer to the TaskHandle_t we want the statistics of.
+ *
+ * @param pxTaskStatus The TaskStatus_t to store the data task statistics in.
+ *
+ * @return pdTRUE on success otherwise pdFALSE
+ */
+UBaseType_t uxTaskGetState( TaskHandle_t const xTask, TaskStatus_t * const pxTaskStatus);
+
+/**
+ * uxTaskGetStackAddress() Get the stack start address of the task
+ *
+ * @param xTask A pointer of the TaskHandle_t we want the stack address off
+ *
+ * @return the stack start address of the task
+ */
+StackType_t* uxTaskGetStackAddress(TaskHandle_t const xTask);
+
+/**
+ * uxTaskGetCurrentStackAddress() Get the last stored stack address in the TCB
+ *
+ * @param xTask A pointer of the TaskHandle_t we want the stack address off
+ *
+ * @return The current stack address stored in the TCB
+ */
+StackType_t* uxTaskGetCurrentStackAddress(TaskHandle_t const xTask);
 
 /**
  * task. h

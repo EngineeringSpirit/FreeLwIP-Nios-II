@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.1.0 - Copyright (C) 2011 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
 	
 
     ***************************************************************************
@@ -71,9 +71,6 @@
 #include "projdefs.h"
 #include "task.h"
 
-/* Interrupts are enabled. */
-#define portINITIAL_ESTATUS     ( portSTACK_TYPE ) 0x01 
-
 extern void (*taskStart)(void);                 /* The entry point for all tasks. */
 
 extern void *pxCurrentTCB;
@@ -101,8 +98,6 @@ void freertosIntEnter(void)
 
 		if (interruptNesting < 255)
 			++interruptNesting;
-		else
-			NIOS2_BREAK();
 
 		alt_irq_enable_all(context);
 	}
@@ -117,29 +112,12 @@ void freertosIntExit(void)
 		if (interruptNesting > 0)
 			--interruptNesting;
 
-		if (interruptNesting == 0)
+		if (interruptNesting == 0 && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
 			freertosIntContextSwitch();
 
 		alt_irq_enable_all(context);
 	}
 }
-
-#if 0
-static volatile alt_irq_context lastContext;
-
-void enh_alt_irq_disable_all()
-{
-	alt_irq_context ctxt = alt_irq_disable_all();
-	lastContext |= ctxt;
-}
-
-void enh_alt_irq_enable_all()
-{
-	alt_irq_context restore = lastContext;
-	lastContext = 0;
-	alt_irq_enable_all(restore);
-}
-#endif
 
 /* 
  * See header file for description. 
@@ -149,10 +127,6 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 #if 1 // new port
 	StackType_t *pxFramePointer = pxTopOfStack - 1;
 	StackType_t *pxStackPointer;
-	StackType_t xGlobalPointer;
-
-    prvReadGp( &xGlobalPointer );
-
 	pxStackPointer = pxFramePointer - 13;
 
 	/* fill the stack frame. */
@@ -226,11 +200,13 @@ void vPortYieldTask(void)
 {
 	if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
 	{
-		alt_irq_context ctxt = alt_irq_disable_all();
+		alt_irq_context context = alt_irq_disable_all();
+
+		portDISABLE_INTERRUPTS();
 
 		freertosContextSwitch();
 
-		alt_irq_enable_all(ctxt);
+		alt_irq_enable_all(context);
 
 #if 0
 		printf("t: %p, sp: %p, fp: %p\n", pxCurrentTCB, GetStackPointer(), GetFramePointer());

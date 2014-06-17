@@ -101,7 +101,6 @@ freertosContextSwitch:
        * Save the current tasks stack pointer into the current tasks OS_TCB.
        * i.e. pxCurrentTCB->pxTopOfStack = sp;
        */
-
       stw sp, (r4)                  /* save the stack pointer (OSTCBStkPtr */
                                     /* is the first element in the OS_TCB  */
                                     /* structure.                          */
@@ -109,8 +108,8 @@ freertosContextSwitch:
       /*
        * Call the user definable freertosTaskSwitchHook()
        */
-
       call freertosTaskSwitchHook
+
 0:
 
 9:
@@ -122,7 +121,6 @@ freertosContextSwitch:
       /*
        * Set the stack pointer to point to the new task's stack
        */
-
       ldw sp, (r4) /* the stack pointer is the first entry in the OS_TCB structure */
 
 #if defined(ALT_STACK_CHECK) && (OS_TASK_CREATE_EXT_EN > 0)
@@ -134,7 +132,6 @@ freertosContextSwitch:
       /*
        * Restore the saved registers for the new task.
        */
-
       ldw ra,  0(sp)
       ldw fp,  4(sp)
       ldw r23, 8(sp)
@@ -153,7 +150,6 @@ freertosContextSwitch:
 #endif
 
       addi sp, sp, 44
-
       /*
        * resume execution of the new task.
        */
@@ -181,7 +177,6 @@ freertosContextSwitch:
       .global freertosStartHighestPrioTask
 
 freertosStartHighestPrioTask:
-
       /*
        * disable interrupts so that the scheduler doesn't run while
        * we're initialising this task.
@@ -194,7 +189,6 @@ freertosStartHighestPrioTask:
       /*
        * Call the user definable freertosTaskSwitchHook()
        */
-
       call freertosTaskSwitchHook
 
 #if defined(ALT_STACK_CHECK) && (OS_TASK_CREATE_EXT_EN == 0)
@@ -207,12 +201,11 @@ freertosStartHighestPrioTask:
       /*
        * start execution of the new task.
        */
-
       br 9b
 
 /*********************************************************************************************************
  *                                        CALL THE TASK INITILISATION FUNCTION
- *                                           void OSStartTsk(void)
+ *                                           void taskStart(void)
  *********************************************************************************************************/
 
       .global taskStart
@@ -224,15 +217,16 @@ taskStart:
       movi sp, 0
 
       /* Enable interrupts */
-      rdctl r2, status
-      ori   r2, r2, 0x1
-      wrctl status, r2
+      rdctl r5, status
+      ori   r5, r5, 0x1
+      wrctl status, r5
 
+	  /* Load the function and it's argument */
       ldw r2, 4(sp)
       ldw r4, 0(sp)
-
       addi sp, sp, 8
 
+	  /* Call the function passing the argument */
       callr r2
 
       nop

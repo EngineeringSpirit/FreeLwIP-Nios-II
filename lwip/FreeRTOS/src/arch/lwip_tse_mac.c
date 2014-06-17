@@ -587,7 +587,7 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 			0,                                  											// read until EOP
 			0);          																	// don't write to constant address
 
-#if LWIP_RECEIVE_SEMAPHORE
+#if LWIP_RECEIVE_SEMAPHORE && 0
 	// if it's waiting we will force a context switch so this task will run right away
 	portEND_SWITCHING_ISR(switch_context);
 #endif

@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.1.0 - Copyright (C) 2011 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
 	
 
     ***************************************************************************
@@ -78,8 +78,10 @@ typedef uint32_t					StackType_t;
 extern void freertosContextSwitch(void);
 extern void freertosIntContextSwitch(void);
 
-extern void* GetStackPointer();
-extern void* GetFramePointer();
+extern void* GetStackPointer(void);
+extern void* GetFramePointer(void);
+
+extern void vPortYieldTask(void);
 
 #if( configUSE_16_BIT_TICKS == 1 )
 typedef uint16_t					TickType_t;
@@ -100,13 +102,26 @@ typedef uint32_t					TickType_t;
 extern void vTaskSwitchContext( void );
 
 #define portYIELD()									vPortYieldTask()
-#define portEND_SWITCHING_ISR( xSwitchRequired ) 	if( xSwitchRequired ) 	vTaskSwitchContext()
-#define portYIELD_FROM_ISR( xSwitchRequired ) 		portEND_SWITCHING_ISR( xSwitchRequired )
+
+// No yield from ISR required since when we exit the ISR we will always select the next available higher task
+#define portEND_SWITCHING_ISR( xSwitchRequired ) 	((void*)xSwitchRequired) //if( xSwitchRequired ) 	vTaskSwitchContext()
+#define portYIELD_FROM_ISR( xSwitchRequired ) 		((void*)xSwitchRequired) //portEND_SWITCHING_ISR( xSwitchRequired )
 
 /*-----------------------------------------------------------*/
 
 extern void vTaskEnterCritical( void );
 extern void vTaskExitCritical( void );
+
+/**
+ * If you look at alt_irq_disable_all() all it does is disable the PIE
+ * There is no need to write back the last context.
+ */
+static ALT_INLINE void ALT_ALWAYS_INLINE mod_irq_enable_all (void)
+{
+  alt_irq_context context;
+  NIOS2_READ_STATUS (context);
+  NIOS2_WRITE_STATUS (context | NIOS2_STATUS_PIE_MSK);
+}
 
 #if 0
 extern void enh_alt_irq_disable_all( void );
@@ -114,7 +129,7 @@ extern void enh_alt_irq_enable_all( void );
 #endif
 
 #define portDISABLE_INTERRUPTS()	alt_irq_disable_all()
-#define portENABLE_INTERRUPTS()		alt_irq_enable_all(0x01)
+#define portENABLE_INTERRUPTS()		mod_irq_enable_all()
 #define portENTER_CRITICAL()        if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) vTaskEnterCritical()
 #define portEXIT_CRITICAL()         if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) vTaskExitCritical()
 /*-----------------------------------------------------------*/

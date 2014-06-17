@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V8.0.0 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
@@ -24,10 +24,10 @@
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-    >>! NOTE: The modification to the GPL is included to allow you to distribute
-    >>! a combined work that includes FreeRTOS without being obliged to provide
-    >>! the source code for proprietary components outside of the FreeRTOS
-    >>! kernel.
+    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
+    >>!   distribute a combined work that includes FreeRTOS without being   !<<
+    >>!   obliged to provide the source code for proprietary components     !<<
+    >>!   outside of the FreeRTOS kernel.                                   !<<
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -760,7 +760,11 @@ TCB_t * pxNewTCB;
 			{
 				/* Reset the next expected unblock time in case it referred to
 				the task that has just been deleted. */
-				prvResetNextTaskUnblockTime();
+				taskENTER_CRITICAL();
+				{
+					prvResetNextTaskUnblockTime();
+				}
+				taskEXIT_CRITICAL();
 			}
 		}
 	}
@@ -1259,7 +1263,11 @@ TCB_t * pxNewTCB;
 				/* A task other than the currently running task was suspended,
 				reset the next expected unblock time in case it referred to the
 				task that is now in the Suspended state. */
-				prvResetNextTaskUnblockTime();
+				taskENTER_CRITICAL();
+				{
+					prvResetNextTaskUnblockTime();
+				}
+				taskEXIT_CRITICAL();
 			}
 			else
 			{
@@ -1804,6 +1812,67 @@ UBaseType_t uxTaskGetNumberOfTasks( void )
 	}
 
 #endif /* configUSE_TRACE_FACILITY */
+
+	/*----------------------------------------------------------*/
+
+UBaseType_t uxTaskGetState( TaskHandle_t const xTask, TaskStatus_t * const pxTaskStatus)
+{
+	TCB_t *pxTCB = prvGetTCBFromHandle( xTask );
+
+	pxTaskStatus->xHandle = xTask;
+	pxTaskStatus->pcTaskName = pxTCB->pcTaskName;
+#if ( configUSE_TRACE_FACILITY == 1 )
+	pxTaskStatus->xTaskNumber = tcb->uxTaskNumber;
+#else
+	pxTaskStatus->xTaskNumber = 0;
+#endif
+	pxTaskStatus->eCurrentState = eTaskGetState(xTask);
+	pxTaskStatus->uxCurrentPriority = pxTCB->uxPriority;
+	pxTaskStatus->uxBasePriority = pxTCB->uxBasePriority;
+
+#if ( configUSE_MUTEXES == 1 )
+	pxTaskStatus->uxBasePriority = pxTCB->uxBasePriority;
+#else
+	pxTaskStatus->uxBasePriority = 0;
+#endif
+
+#if ( configGENERATE_RUN_TIME_STATS == 1 )
+	pxTaskStatus->ulRunTimeCounter = pxTCB->ulRunTimeCounter;
+#else
+	pxTaskStatus->ulRunTimeCounter = 0;
+#endif
+
+#if ( portSTACK_GROWTH > 0 )
+	pxTaskStatus->usStackHighWaterMark = prvTaskCheckFreeStackSpace( ( uint8_t * ) pxTCB->pxEndOfStack );
+#else
+	pxTaskStatus->usStackHighWaterMark = prvTaskCheckFreeStackSpace( ( uint8_t * ) pxTCB->pxStack );
+#endif
+
+	return pdTRUE;
+}
+
+/*----------------------------------------------------------*/
+
+StackType_t* uxTaskGetStackAddress(TaskHandle_t const xTask)
+{
+	TCB_t *pxTCB = prvGetTCBFromHandle( xTask );
+
+#if ( portSTACK_GROWTH == -1 )
+	return pxTCB->pxStack;
+#else
+	return pxTCB->pxEndOfStack;
+#endif
+}
+
+/*----------------------------------------------------------*/
+
+StackType_t* uxTaskGetCurrentStackAddress(TaskHandle_t const xTask)
+{
+	TCB_t *pxTCB = prvGetTCBFromHandle( xTask );
+
+	return (StackType_t*)pxTCB->pxTopOfStack;
+}
+
 /*----------------------------------------------------------*/
 
 #if ( INCLUDE_xTaskGetIdleTaskHandle == 1 )
@@ -2102,6 +2171,10 @@ BaseType_t xSwitchRequired = pdFALSE;
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
+#ifdef ALT_EXCEPTION_STACK
+# include "sys/alt_stack.h"
+#endif
+
 void vTaskSwitchContext( void )
 {
 	if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
@@ -2148,6 +2221,10 @@ void vTaskSwitchContext( void )
 		taskSELECT_HIGHEST_PRIORITY_TASK();
 
 		traceTASK_SWITCHED_IN();
+
+#ifdef ALT_EXCEPTION_STACK
+		alt_set_stack_limit((char*)pxCurrentTCB->pxStack);
+#endif
 
 		#if ( configUSE_NEWLIB_REENTRANT == 1 )
 		{
@@ -3078,8 +3155,13 @@ TCB_t *pxNewTCB;
 		want to allocate and clean RAM statically. */
 		portCLEAN_UP_TCB( pxTCB );
 
-		/* Free up the memory allocated by the scheduler for the task.  It is up to
-		the task to free any memory allocated at the application level. */
+		/* Free up the memory allocated by the scheduler for the task.  It is up
+		to the task to free any memory allocated at the application level. */
+		#if ( configUSE_NEWLIB_REENTRANT == 1 )
+		{
+			_reclaim_reent( &( pxTCB->xNewLib_reent ) );
+		}
+		#endif /* configUSE_NEWLIB_REENTRANT */
 		vPortFreeAligned( pxTCB->pxStack );
 		vPortFree( pxTCB );
 	}

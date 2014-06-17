@@ -43,8 +43,8 @@
 #include <system.h>
 #include <alt_types.h>
 
-#define LWIP_NOASSERT					1
-//#define LWIP_DEBUG						1
+//#define LWIP_NOASSERT					0
+#define LWIP_DEBUG						1
 
 // Set altera typedefs for LwIP (in-case someone chooses a word size different from 32bits)
 typedef alt_u8							u8_t;

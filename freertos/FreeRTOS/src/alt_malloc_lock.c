@@ -74,7 +74,8 @@ void __malloc_unlock ( struct _reent *_r )
 	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 		return;
 	  
-	xSemaphoreGiveRecursive(alt_heapsem);
+	if (xSemaphoreGiveRecursive(alt_heapsem) != pdTRUE)
+		printf("failed to release heap semaphore");
 #endif /* OS_THREAD_SAFE_NEWLIB */
 }
 
