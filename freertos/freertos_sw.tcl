@@ -38,7 +38,7 @@ add_sw_property c_source FreeRTOS/src/alt_main.c
 add_sw_property c_source FreeRTOS/src/alt_malloc_lock.c
 add_sw_property c_source FreeRTOS/src/croutine.c
 add_sw_property c_source FreeRTOS/src/event_groups.c
-add_sw_property c_source FreeRTOS/src/heap_3.c
+add_sw_property c_source FreeRTOS/src/heap.c
 add_sw_property c_source FreeRTOS/src/list.c
 add_sw_property c_source FreeRTOS/src/port.c
 add_sw_property c_source FreeRTOS/src/queue.c
@@ -232,3 +232,5 @@ add_sw_setting boolean system_h_define include.inc_task_get_stack OS_uxTaskGetSt
 add_sw_setting decimal_number system_h_define kernel.kernel_irq_priority OS_KERNEL_INTERRUPT_PRIORITY 1 "Should not be changed and removed?"
 
 add_sw_setting decimal_number system_h_define kernel.max_syscall_irq_priority OS_MAX_SYSCALL_INTERRUPT_PRIORITY 3 "Should not be changed and removed?"
+
+add_sw_setting boolean system_h_define kernel.debug_assert OS_USE_ASSERT_DEBUG false "Should the OS check arguments with assertions?"

@@ -210,13 +210,22 @@
  * MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_SEG                16
+#define MEMP_NUM_TCP_SEG                CONF_LWIP_MEMP_TCP_SEG
 
 /**
  * MEMP_NUM_REASSDATA: the number of simultaneously IP packets queued for
  * reassembly (whole packets, not fragments!)
  */
-#define MEMP_NUM_REASSDATA              5
+#define MEMP_NUM_REASSDATA              CONF_LWIP_MEMP_REASSDATA
+
+/**
+ * MEMP_NUM_FRAG_PBUF: the number of IP fragments simultaneously sent
+ * (fragments, not whole packets!).
+ * This is only used with IP_FRAG_USES_STATIC_BUF==0 and
+ * LWIP_NETIF_TX_SINGLE_PBUF==0 and only has to be > 1 with DMA-enabled MACs
+ * where the packet is not yet sent when netif->output returns.
+ */
+#define MEMP_NUM_FRAG_PBUF              15
 
 /**
  * MEMP_NUM_ARP_QUEUE: the number of simulateously queued outgoing
@@ -224,7 +233,7 @@
  * their destination address) to finish.
  * (requires the ARP_QUEUEING option)
  */
-#define MEMP_NUM_ARP_QUEUE              15
+#define MEMP_NUM_ARP_QUEUE              CONF_LWIP_MEMP_ARP_QUEUE
 
 /**
  * MEMP_NUM_IGMP_GROUP: The number of multicast groups whose network interfaces
@@ -238,33 +247,33 @@
  * MEMP_NUM_SYS_TIMEOUT: the number of simulateously active timeouts.
  * (requires NO_SYS==0)
  */
-#define MEMP_NUM_SYS_TIMEOUT            10
+#define MEMP_NUM_SYS_TIMEOUT            CONF_LWIP_MEMP_SYS_TIMEOUT
 
 /**
  * MEMP_NUM_NETBUF: the number of struct netbufs.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETBUF                 (CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN)
+#define MEMP_NUM_NETBUF                 CONF_LWIP_MEMP_NETBUFS
 
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETCONN                (CONF_LWIP_RAW_PCB + CONF_LWIP_UDP_PCB + CONF_LWIP_TCP_PCB + CONF_LWIP_TCP_PCB_LISTEN)
+#define MEMP_NUM_NETCONN                CONF_LWIP_MEMP_NETCONNS
 
 /**
  * MEMP_NUM_TCPIP_MSG_API: the number of struct tcpip_msg, which are used
  * for callback/timeout API communication. 
  * (only needed if you use tcpip.c)
  */
-#define MEMP_NUM_TCPIP_MSG_API          8
+#define MEMP_NUM_TCPIP_MSG_API          CONF_LWIP_MEMP_TCPIP_MSG_API
 
 /**
  * MEMP_NUM_TCPIP_MSG_INPKT: the number of struct tcpip_msg, which are used
  * for incoming packets. 
  * (only needed if you use tcpip.c)
  */
-#define MEMP_NUM_TCPIP_MSG_INPKT        64
+#define MEMP_NUM_TCPIP_MSG_INPKT        CONF_LWIP_MEMP_TCPIP_MSG_INPKT
 
 /**
  * MEMP_NUM_SNMP_NODE: the number of leafs in the SNMP tree.
@@ -312,7 +321,7 @@
 /**
  * PBUF_POOL_SIZE: the number of buffers in the pbuf pool. 
  */
-#define PBUF_POOL_SIZE                  64
+#define PBUF_POOL_SIZE                  CONF_LWIP_MEMP_PBUF_POOL_SIZE
 
 /*
    ---------------------------------

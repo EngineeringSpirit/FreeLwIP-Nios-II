@@ -135,7 +135,11 @@ be called.  Only API functions that end in ...FromISR() can be used within
 interrupts. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY		OS_MAX_SYSCALL_INTERRUPT_PRIORITY
 
-#define configASSERT( x )							assert( (x) )
+#if OS_USE_ASSERT_DEBUG
+# define configASSERT( x )							assert( (x) )
+#else
+# define configASSERT( x )							((void*)x)
+#endif
 
 #define CONCAT(a,b)									a ## b
 

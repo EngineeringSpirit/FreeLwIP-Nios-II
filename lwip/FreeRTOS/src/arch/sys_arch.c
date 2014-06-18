@@ -33,6 +33,7 @@ u32_t sys_now(void)
 
 #if ! NO_SYS
 // ---------------------------------- Semaphore stuff --------------------------------------------
+
 /**
  * Creates and returns a new semaphore. The "count" argument specifies
  * the initial state of the semaphore.
@@ -42,7 +43,7 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 	// count 0 means a binary semaphore so max value should be 1
 	*sem = xSemaphoreCreateCounting((count ? count : 1), count);
 
-	if (*sem == NULL) {
+	if ( ! *sem) {
 		SYS_STATS_INC(sem.err);
 		return ERR_MEM;  // TBD need assert
 	}
@@ -122,6 +123,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 
 // ------------------------------------ Mutex Stuff -----------------------------------------------
 #if ! LWIP_COMPAT_MUTEX
+
 /** Create a new mutex
  * @param mutex pointer to the mutex to create
  * @return a new mutex */
@@ -129,7 +131,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
 {
 	*mutex = xSemaphoreCreateMutex();
 
-	if (!*mutex) {
+	if ( ! *mutex) {
 		SYS_STATS_INC(mutex.err);
 		return ERR_MEM;
 	}
@@ -164,6 +166,7 @@ void sys_mutex_free(sys_mutex_t *mutex)
 #endif /* LWIP_COMPAT_MUTEX */
 
 // ---------------------------------- MessageBox stuff --------------------------------------------
+
 /**
  * Creates an empty mailbox for maximum "size" elements. Elements stored
  * in mailboxes are pointers. You have to define macros "_MBOX_SIZE"
@@ -172,9 +175,9 @@ void sys_mutex_free(sys_mutex_t *mutex)
  */
 err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 {
-	*mbox = xQueueCreate(size, sizeof(void *)); // XXX correct? We are posting pointers so I guess it is...
+	*mbox = xQueueCreate(size, sizeof(void *));
 
-	if (!*mbox) {
+	if ( ! *mbox) {
 		SYS_STATS_INC(mbox.err);
 		return ERR_MEM;
 	}
@@ -194,7 +197,7 @@ void sys_mbox_free(sys_mbox_t *mbox)
 	if (uxQueueMessagesWaiting(*mbox))
 	{
 		// Line for breakpoint.  Should never break here!
-		__asm__ __volatile__ ( "nop" );
+		NIOS2_BREAK();
 	}
 
 	vQueueDelete(*mbox);

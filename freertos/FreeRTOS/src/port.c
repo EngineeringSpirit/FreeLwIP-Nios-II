@@ -124,7 +124,6 @@ void freertosIntExit(void)
  */
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 {    
-#if 1 // new port
 	StackType_t *pxFramePointer = pxTopOfStack - 1;
 	StackType_t *pxStackPointer;
 	pxStackPointer = pxFramePointer - 13;
@@ -137,40 +136,6 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	pxStackPointer[0] = ((StackType_t)&taskStart) + sizeof(StackType_t); /* exception return address (ea) */
 
 	return pxStackPointer;
-
-#else
-portSTACK_TYPE *pxFramePointer = pxTopOfStack - 1;
-portSTACK_TYPE xGlobalPointer;
-
-    prvReadGp( &xGlobalPointer ); 
-
-    /* End of stack marker. */
-    *pxTopOfStack = 0xdeadbeef;
-    pxTopOfStack--;
-
-    *pxTopOfStack = ( portSTACK_TYPE ) pxFramePointer;
-    pxTopOfStack--;
-    
-    *pxTopOfStack = xGlobalPointer; 
-    
-    /* Space for R23 to R16. */
-    pxTopOfStack -= 9;
-
-    *pxTopOfStack = ( portSTACK_TYPE ) pxCode;
-    pxTopOfStack--;
-
-    *pxTopOfStack = portINITIAL_ESTATUS;
-
-    /* Space for R15 to R5. */
-    pxTopOfStack -= 12;
-
-    *pxTopOfStack = ( portSTACK_TYPE ) pvParameters;
-
-    /* Space for R3 to R1, muldiv and RA. */
-    pxTopOfStack -= 5;
-
-    return pxTopOfStack;
-#endif
 }
 /*-----------------------------------------------------------*/
 

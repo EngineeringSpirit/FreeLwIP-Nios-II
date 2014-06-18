@@ -46,10 +46,6 @@
 #include "semphr.h"
 #include "task.h"
 
-/* semaphore to protect the heap */
-
-SemaphoreHandle_t alt_heapsem;
-
 /* __malloc_lock needs to provide recursive mutex locking */
 
 void __malloc_lock ( struct _reent *_r )
@@ -58,10 +54,7 @@ void __malloc_lock ( struct _reent *_r )
 	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 		return;
 
-	// wait for the mutex to be released
-	while (xSemaphoreTakeRecursive(alt_heapsem, 10) != pdTRUE)
-		vTaskDelay(1);
-
+	vTaskSuspendAll();
 #endif /* OS_THREAD_SAFE_NEWLIB */
 	return;
 }
@@ -74,8 +67,7 @@ void __malloc_unlock ( struct _reent *_r )
 	if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)
 		return;
 	  
-	if (xSemaphoreGiveRecursive(alt_heapsem) != pdTRUE)
-		printf("failed to release heap semaphore");
+	xTaskResumeAll();
 #endif /* OS_THREAD_SAFE_NEWLIB */
 }
 

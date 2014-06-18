@@ -1,5 +1,5 @@
 /*
-    FreeRTOS V7.2.0 - Copyright (C) 2012 Real Time Engineers Ltd.
+    FreeRTOS V8.0.1 - Copyright (C) 2014 Real Time Engineers Ltd.
 	
 
     ***************************************************************************
@@ -92,13 +92,7 @@ task.h is included from an application file. */
 
 void *pvPortMalloc( size_t xWantedSize )
 {
-void *pvReturn;
-
-	//vTaskSuspendAll();
-	{
-		pvReturn = malloc( xWantedSize );
-	}
-	//xTaskResumeAll();
+	void *pvReturn = malloc( xWantedSize );
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -117,13 +111,7 @@ void *pvReturn;
 void vPortFree( void *pv )
 {
 	if( pv )
-	{
-		//vTaskSuspendAll();
-		{
-			free( pv );
-		}
-		//xTaskResumeAll();
-	}
+		free( pv );
 }
 
 

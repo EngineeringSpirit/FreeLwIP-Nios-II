@@ -61,7 +61,7 @@ typedef TaskHandle_t					sys_thread_t;
 
 #define archPOST_BLOCK_TIME_MS			10000
 
-#define SYS_ARCH_DECL_PROTECT(lev)		//u32_t lev
+#define SYS_ARCH_DECL_PROTECT(lev)
 #define SYS_ARCH_PROTECT(lev)			portENTER_CRITICAL()
 #define SYS_ARCH_UNPROTECT(lev)			portEXIT_CRITICAL()
 
