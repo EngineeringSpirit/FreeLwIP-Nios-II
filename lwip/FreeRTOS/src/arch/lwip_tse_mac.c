@@ -60,7 +60,7 @@ int tse_sgdma_rx_isr(void * context, u_long intnum);
 int tse_sgdma_read_init(lwip_tse_info* tse_ptr);
 int tse_mac_rcv(struct ethernetif *ethernetif);
 
-#define dprintf(x) do { /* printf x */ } while (0)
+#define dprintf(x) do { printf x ; } while (0)
 
 #if! defined( ETH_PAD_SIZE ) || ETH_PAD_SIZE != 2
 #error The Altera Triple Speed Ethernet lwIP driver requires '#define ETH_PAD_SIZE 2' in lwipopts.h
@@ -211,7 +211,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	 */
 	if ((IORD_ALTERA_TSEMAC_TX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK) == 0)
 	{
-		dprintf(("[tse_mac_init] Error: Incompatible %d value with TX_CMD_STAT register return TxShift16 value. \n",ETH_PAD_SIZE));
+		dprintf(("[tse_mac_init] Error: Incompatible %d value with TX_CMD_STAT register return TxShift16 value. \n", ETH_PAD_SIZE));
 		return ERR_IF;
 	}
 
@@ -221,7 +221,7 @@ int tse_mac_init(int iface, struct ethernetif *ethernetif)
 	/* check if the MAC supports the 16-bit shift option at the RX CMD STATUS Register  */
 	if ((IORD_ALTERA_TSEMAC_RX_CMD_STAT(tse[iface].mi.base) & ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK) == 0)
 	{
-		dprintf(("[tse_mac_init] Error: Incompatible %d value with RX_CMD_STAT register return RxShift16 value. \n",ETH_PAD_SIZE));
+		dprintf(("[tse_mac_init] Error: Incompatible %d value with RX_CMD_STAT register return RxShift16 value. \n", ETH_PAD_SIZE));
 		return ERR_IF;
 	}
 
@@ -586,11 +586,6 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 			uncached_packet_payload,            											// starting write_address
 			0,                                  											// read until EOP
 			0);          																	// don't write to constant address
-
-#if LWIP_RECEIVE_SEMAPHORE && 0
-	// if it's waiting we will force a context switch so this task will run right away
-	portEND_SWITCHING_ISR(switch_context);
-#endif
 
 	return ERR_OK;
 }

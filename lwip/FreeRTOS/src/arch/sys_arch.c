@@ -317,7 +317,7 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 	TaskHandle_t objTask;
 	int result = pdFAIL;
 
-	result = xTaskCreate(thread, (const char*)name, stacksize, arg, prio, &objTask);
+	result = xTaskCreate(thread, (const char*)name, stacksize / sizeof(StackType_t), arg, prio, &objTask);
 
 	return (result == pdPASS) ? objTask : NULL;
 }

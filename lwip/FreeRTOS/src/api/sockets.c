@@ -1356,15 +1356,6 @@ again:
       }
     }
 
-    if ((scb->next) && (scb->next < 0x00800000 || scb->next > 0x00ffffff))
-    {
-    	NIOS2_BREAK();
-    }
-    else if (scb < 0x00800000 || scb > 0x00ffffff)
-    {
-    	NIOS2_BREAK();
-    }
-
     /* unlock interrupts with each step */
     last_select_cb_ctr = select_cb_ctr;
     SYS_ARCH_UNPROTECT(lev);
