@@ -559,7 +559,7 @@ int tse_mac_rcv(struct ethernetif *ethernetif)
 
 			alt_irq_enable_all(context);
 
-			dprintf(("No free buffers for RX on iface: %hhd\n", ethernetif->iface));
+			//dprintf(("No free buffers for RX on iface: %hhd\n", ethernetif->iface));
 		}
 		else
 		{

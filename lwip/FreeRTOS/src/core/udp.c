@@ -503,7 +503,7 @@ udp_sendto_chksum(struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *dst_ip,
 
   /* find the outgoing network interface for this packet */
 #if LWIP_IGMP
-  netif = ip_route((ip_addr_ismulticast(dst_ip))?(&(pcb->multicast_ip)):(dst_ip));
+  netif = ip_route(&(pcb->local_ip), (ip_addr_ismulticast(dst_ip))?(&(pcb->multicast_ip)):(dst_ip));
 #else
   netif = ip_route(&(pcb->local_ip), dst_ip);
 #endif /* LWIP_IGMP */

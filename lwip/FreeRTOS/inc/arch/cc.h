@@ -135,6 +135,9 @@ typedef u32_t							ipaddr_t;
 // Redefine memory align functionality
 #define LWIP_MEM_ALIGN(addr)			((void *)((((mem_ptr_t)(addr) + MEM_ALIGNMENT - 1) & ~(mem_ptr_t)(MEM_ALIGNMENT-1))))
 
+// Implement add a random number generator for IGMP support
+#define LWIP_RAND()						rand()
+
 // Some default math stuff
 #ifndef KB
 # define KB(x)							((x) * 1024)
