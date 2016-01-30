@@ -131,6 +131,9 @@ portSTACK_TYPE xGlobalPointer;
     /* Space for R3 to R1, muldiv and RA. */
     pxTopOfStack -= 5;
 
+    /* Initialize stack pointer to prevent debugger crash. */
+    *pxTopOfStack = ( portSTACK_TYPE ) xPortStartScheduler;
+
     return pxTopOfStack;
 }
 /*-----------------------------------------------------------*/
